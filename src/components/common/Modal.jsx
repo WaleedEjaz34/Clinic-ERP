@@ -37,40 +37,46 @@ export const Modal = ({
       />
 
       {/* Modal Container */}
-      <div className="flex min-h-full items-center justify-center p-2 sm:p-6">
+      <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-6">
         <div
-          className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-modal border border-slate-200/90 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 flex flex-col max-h-[96vh] sm:max-h-[92vh]`}
+          className={`relative w-full ${maxWidth} bg-white rounded-t-3xl sm:rounded-2xl shadow-modal border-t sm:border border-slate-200/90 overflow-hidden transform transition-all animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 flex flex-col max-h-[92vh] sm:max-h-[90vh]`}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Mobile top pull pill handle */}
+          <div className="pt-2 pb-0.5 sm:hidden flex justify-center bg-slate-50/90 flex-shrink-0">
+            <div className="w-12 h-1 bg-slate-300 rounded-full" />
+          </div>
+
           {/* Top subtle brand accent line */}
           <div className="h-1 bg-gradient-to-r from-brand-600 via-teal-500 to-indigo-600 w-full flex-shrink-0" />
 
-          {/* Modal Header */}
-          <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex-shrink-0">
-            <div>
-              <h3 className="text-base font-bold text-slate-900 tracking-tight">
+          {/* Modal Header (Sticky) */}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/90 backdrop-blur-xs flex-shrink-0 sticky top-0 z-10">
+            <div className="min-w-0 pr-2">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight truncate">
                 {title}
               </h3>
               {subtitle && (
-                <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+                <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 line-clamp-1">{subtitle}</p>
               )}
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-colors"
+              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-colors flex-shrink-0"
+              aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Modal Body with internal scrolling if long */}
-          <div className="px-5 sm:px-6 py-5 overflow-y-auto flex-1 text-slate-700 text-xs">
+          {/* Modal Body with internal scrolling */}
+          <div className="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1 text-slate-700 text-xs overscroll-contain">
             {children}
           </div>
 
-          {/* Optional Footer */}
+          {/* Sticky Bottom Action Bar Footer */}
           {footer && (
-            <div className="px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50/80 flex items-center justify-end gap-2.5 flex-shrink-0">
+            <div className="px-4 sm:px-6 py-3 sm:py-3.5 border-t border-slate-100 bg-slate-50/95 backdrop-blur-xs flex items-center justify-end gap-2 flex-shrink-0 sticky bottom-0 z-10">
               {footer}
             </div>
           )}

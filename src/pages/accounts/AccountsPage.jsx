@@ -453,17 +453,17 @@ export const AccountsPage = () => {
             />
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setIsAddEditOpen(false)}
-              className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex-1 sm:flex-initial px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm shadow-brand-500/20 transition-all"
+              className="flex-1 sm:flex-initial px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/20 transition-all min-h-[44px]"
             >
               {editingAccount ? 'Update Account' : 'Save Account'}
             </button>
@@ -485,20 +485,20 @@ export const AccountsPage = () => {
         {viewingAccount && (
           <div className="space-y-4">
             {/* Balance Overview Card */}
-            <div className="p-4 bg-slate-900 text-white rounded-xl flex items-center justify-between">
+            <div className="p-4 bg-slate-900 text-white rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400">Current Available Balance</span>
                 <h3 className="text-2xl font-black text-emerald-400 mt-0.5">
                   {formatCurrency(viewingAccount.currentBalance)}
                 </h3>
               </div>
-              <div className="text-right text-xs text-slate-400">
+              <div className="sm:text-right text-xs text-slate-400">
                 <p><strong>Opening Balance:</strong> {formatCurrency(viewingAccount.openingBalance)}</p>
                 <p><strong>Account Ref:</strong> {viewingAccount.accountNumber || viewingAccount.id}</p>
               </div>
             </div>
 
-            {/* Transactions Table */}
+            {/* Transactions Section */}
             <div>
               <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                 Recorded Transactions ({accountTransactions.length})
@@ -509,38 +509,70 @@ export const AccountsPage = () => {
                   No inflows or outflows recorded for this account yet.
                 </p>
               ) : (
-                <div className="border border-slate-200 rounded-xl overflow-hidden max-h-80 overflow-y-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead className="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px] border-b border-slate-200 sticky top-0">
-                      <tr>
-                        <th className="py-2.5 px-3">Date</th>
-                        <th className="py-2.5 px-3">Reference</th>
-                        <th className="py-2.5 px-3">Description</th>
-                        <th className="py-2.5 px-3 text-right">Inflow (+)</th>
-                        <th className="py-2.5 px-3 text-right">Outflow (-)</th>
-                        <th className="py-2.5 px-3 text-right">Running Balance</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {accountTransactions.map((tx, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50/70">
-                          <td className="py-2.5 px-3 whitespace-nowrap text-slate-500">{formatDate(tx.date)}</td>
-                          <td className="py-2.5 px-3 font-mono font-semibold text-slate-800">{tx.reference}</td>
-                          <td className="py-2.5 px-3">{tx.description}</td>
-                          <td className="py-2.5 px-3 text-right font-semibold text-emerald-600">
-                            {tx.inflow > 0 ? formatCurrency(tx.inflow) : '—'}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-semibold text-rose-600">
-                            {tx.outflow > 0 ? formatCurrency(tx.outflow) : '—'}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-bold text-slate-900">
-                            {formatCurrency(tx.runningBalance)}
-                          </td>
+                <>
+                  {/* Mobile Transaction Cards (sm:hidden) */}
+                  <div className="sm:hidden space-y-2.5 max-h-80 overflow-y-auto">
+                    {accountTransactions.map((tx, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-slate-800 text-[11px]">{tx.reference}</span>
+                          <span className="text-slate-400 text-[10px]">{formatDate(tx.date)}</span>
+                        </div>
+                        <p className="text-slate-700 font-medium">{tx.description}</p>
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-xs">
+                          <div>
+                            {tx.inflow > 0 && (
+                              <span className="font-bold text-emerald-600">+{formatCurrency(tx.inflow)}</span>
+                            )}
+                            {tx.outflow > 0 && (
+                              <span className="font-bold text-rose-600">-{formatCurrency(tx.outflow)}</span>
+                            )}
+                          </div>
+                          <span className="font-bold text-slate-900">
+                            Bal: {formatCurrency(tx.runningBalance)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Transactions Table (hidden sm:block) */}
+                  <div className="hidden sm:block border border-slate-200 rounded-xl overflow-hidden max-h-80 overflow-y-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px] border-b border-slate-200 sticky top-0">
+                        <tr>
+                          <th className="py-2.5 px-3">Date</th>
+                          <th className="py-2.5 px-3">Reference</th>
+                          <th className="py-2.5 px-3">Description</th>
+                          <th className="py-2.5 px-3 text-right">Inflow (+)</th>
+                          <th className="py-2.5 px-3 text-right">Outflow (-)</th>
+                          <th className="py-2.5 px-3 text-right">Running Balance</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-700">
+                        {accountTransactions.map((tx, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/70">
+                            <td className="py-2.5 px-3 whitespace-nowrap text-slate-500">{formatDate(tx.date)}</td>
+                            <td className="py-2.5 px-3 font-mono font-semibold text-slate-800">{tx.reference}</td>
+                            <td className="py-2.5 px-3">{tx.description}</td>
+                            <td className="py-2.5 px-3 text-right font-semibold text-emerald-600">
+                              {tx.inflow > 0 ? formatCurrency(tx.inflow) : '—'}
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-semibold text-rose-600">
+                              {tx.outflow > 0 ? formatCurrency(tx.outflow) : '—'}
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                              {formatCurrency(tx.runningBalance)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           </div>

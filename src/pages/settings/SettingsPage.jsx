@@ -203,35 +203,37 @@ export const SettingsPage = () => {
 
       {/* Main Container with Sidebar Tabs */}
       <div className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[580px]">
-        {/* Navigation Sidebar */}
-        <div className="md:col-span-3 border-b md:border-b-0 md:border-r border-slate-200/90 bg-slate-50/60 p-3 space-y-1">
-          <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        {/* Navigation Sidebar (Horizontal on mobile, vertical on desktop) */}
+        <div className="md:col-span-3 border-b md:border-b-0 md:border-r border-slate-200/90 bg-slate-50/60 p-2.5 sm:p-3">
+          <div className="hidden md:block px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
             Configuration Sections
           </div>
-          {SETTING_TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = currentTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-white text-brand-700 shadow-xs border border-brand-200/80 ring-1 ring-brand-500/20'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 flex-shrink-0 ${
-                    isActive ? 'text-brand-600' : 'text-slate-400'
+          <div className="flex md:flex-col overflow-x-auto no-scrollbar gap-1.5">
+            {SETTING_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = currentTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`whitespace-nowrap flex items-center gap-2 px-3 py-2 sm:py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-white text-brand-700 shadow-xs border border-brand-200/80 ring-1 ring-brand-500/20'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
                   }`}
-                />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+                >
+                  <Icon
+                    className={`w-4 h-4 flex-shrink-0 ${
+                      isActive ? 'text-brand-600' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-          <div className="pt-6 px-3">
+          <div className="hidden md:block pt-6 px-3">
             <div className="p-3 bg-brand-50/60 rounded-xl border border-brand-100 text-[11px] text-brand-900 space-y-1">
               <span className="font-bold flex items-center gap-1 text-brand-700">
                 <UserCheck className="w-3.5 h-3.5" />
@@ -394,9 +396,9 @@ export const SettingsPage = () => {
                 <button
                   type="button"
                   onClick={() => handleSave('Clinic Profile Settings')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors min-h-[44px]"
                 >
-                  <Save className="w-3.5 h-3.5" />
+                  <Save className="w-4 h-4" />
                   <span>Save Profile</span>
                 </button>
               </div>
@@ -436,8 +438,35 @@ export const SettingsPage = () => {
                 </div>
               </div>
 
-              {/* Permission Matrix */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
+              {/* Mobile Permission Matrix Cards (md:hidden) */}
+              <div className="md:hidden space-y-2.5">
+                {[
+                  { module: 'Dashboard Overview', admin: true, doc: true, recep: true, acc: true },
+                  { module: 'Patients List & Medical Profile', admin: true, doc: true, recep: true, acc: false },
+                  { module: 'Appointments & Scheduling', admin: true, doc: true, recep: true, acc: false },
+                  { module: 'Prescriptions & Doctor EMR', admin: true, doc: true, recep: false, acc: false },
+                  { module: 'Patient Bills & Invoicing', admin: true, doc: false, recep: true, acc: true },
+                  { module: 'Payment Collection & Receipts', admin: true, doc: false, recep: true, acc: true },
+                  { module: 'Clinic Expense Vouchers', admin: true, doc: false, recep: false, acc: true },
+                  { module: 'Cashbook & Bank Accounts', admin: true, doc: false, recep: false, acc: true },
+                  { module: 'Chart of Accounts (COA)', admin: true, doc: false, recep: false, acc: true },
+                  { module: 'Doctors & Staff Management', admin: true, doc: false, recep: false, acc: false },
+                  { module: 'System Configurations & Settings', admin: true, doc: false, recep: false, acc: false },
+                ].map((row, idx) => (
+                  <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs space-y-2">
+                    <div className="font-bold text-slate-800">{row.module}</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {row.admin && <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-bold border border-purple-200">Admin</span>}
+                      {row.doc && <span className="px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 text-[10px] font-bold border border-teal-200">Doctor</span>}
+                      {row.recep && <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200">Receptionist</span>}
+                      {row.acc && <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200">Accountant</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Permission Matrix (hidden md:block) */}
+              <div className="hidden md:block border border-slate-200 rounded-xl overflow-hidden">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
@@ -486,9 +515,9 @@ export const SettingsPage = () => {
                 <button
                   type="button"
                   onClick={() => handleSave('Roles & Permissions')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors min-h-[44px]"
                 >
-                  <Save className="w-3.5 h-3.5" />
+                  <Save className="w-4 h-4" />
                   <span>Update Permissions</span>
                 </button>
               </div>
@@ -586,9 +615,9 @@ export const SettingsPage = () => {
                 <button
                   type="button"
                   onClick={() => handleSave('Printing Settings')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors min-h-[44px]"
                 >
-                  <Save className="w-3.5 h-3.5" />
+                  <Save className="w-4 h-4" />
                   <span>Save Printing Setup</span>
                 </button>
               </div>
@@ -667,9 +696,9 @@ export const SettingsPage = () => {
                 <button
                   type="button"
                   onClick={() => handleSave('System Configurations')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors min-h-[44px]"
                 >
-                  <Save className="w-3.5 h-3.5" />
+                  <Save className="w-4 h-4" />
                   <span>Save System Settings</span>
                 </button>
               </div>

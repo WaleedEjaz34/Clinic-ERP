@@ -199,8 +199,8 @@ export const DashboardPage = () => {
         </div>
       </div>
 
-      {/* 7 KPI Cards (Section 5) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-3.5">
+      {/* 7 KPI Cards (Section 5) - Mobile 2-column grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-2.5 sm:gap-3.5">
         <KPICard
           title="Today's Appts"
           value={kpis.todayAppointmentsCount}
@@ -267,17 +267,19 @@ export const DashboardPage = () => {
           accentColor="border-teal-100 hover:border-teal-300"
           onClick={() => navigate('/payments')}
         />
-        <KPICard
-          title="Disbursements"
-          value={formatCurrency(kpis.todayExpenses)}
-          icon={TrendingDown}
-          subtitle="Clinic expenditures"
-          trend="Petty & operational"
-          trendType="neutral"
-          iconBg="bg-rose-50 text-rose-600"
-          accentColor="border-rose-100 hover:border-rose-300"
-          onClick={() => navigate('/expenses')}
-        />
+        <div className="col-span-2 sm:col-span-1">
+          <KPICard
+            title="Disbursements"
+            value={formatCurrency(kpis.todayExpenses)}
+            icon={TrendingDown}
+            subtitle="Clinic expenditures"
+            trend="Petty & operational"
+            trendType="neutral"
+            iconBg="bg-rose-50 text-rose-600"
+            accentColor="border-rose-100 hover:border-rose-300"
+            onClick={() => navigate('/expenses')}
+          />
+        </div>
       </div>
 
       {/* Quick Action Navigation Buttons */}

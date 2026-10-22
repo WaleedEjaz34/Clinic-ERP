@@ -7,8 +7,6 @@ import {
   ChevronRight,
   Inbox,
   Loader2,
-  LayoutGrid,
-  Table as TableIcon,
 } from 'lucide-react';
 import { SearchableSelect } from './SearchableSelect';
 
@@ -25,8 +23,6 @@ export const DataTable = ({
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
-  // View mode for mobile/compact screens: 'table' or 'cards'
-  const [viewMode, setViewMode] = useState('auto'); // 'auto' | 'cards' | 'table'
 
   // Sorting
   const sortedData = useMemo(() => {
@@ -75,43 +71,19 @@ export const DataTable = ({
     });
   };
 
-  // Find actions column if any
+  // Find actions column and status column if any
   const actionColumn = columns.find((c) => (c.key || '').toLowerCase().includes('action') || (c.label || '').toLowerCase().includes('action'));
+  const statusColumn = columns.find((c) => (c.key || '').toLowerCase().includes('status'));
   const nonActionColumns = columns.filter((c) => c !== actionColumn);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden">
-      {/* Mobile View Toggle Bar (Only shown on small screens) */}
-      <div className="md:hidden flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200/80 text-xs text-slate-500">
+      {/* Mobile Records Header (md:hidden) */}
+      <div className="md:hidden flex items-center justify-between px-3.5 py-2.5 bg-slate-50 border-b border-slate-200/80 text-xs text-slate-500">
         <span className="font-semibold text-slate-700">
-          {totalRecords} record{totalRecords !== 1 ? 's' : ''}
+          Showing {paginatedData.length} of {totalRecords} record{totalRecords !== 1 ? 's' : ''}
         </span>
-        <div className="inline-flex items-center rounded-lg bg-white border border-slate-200 p-0.5 shadow-xs">
-          <button
-            type="button"
-            onClick={() => setViewMode('cards')}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
-              viewMode === 'cards' || viewMode === 'auto'
-                ? 'bg-brand-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <LayoutGrid className="w-3 h-3" />
-            <span>Cards</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('table')}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
-              viewMode === 'table'
-                ? 'bg-brand-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <TableIcon className="w-3 h-3" />
-            <span>Table</span>
-          </button>
-        </div>
+        <span className="text-[11px] font-medium text-slate-400">Card View</span>
       </div>
 
       {/* Loading state */}
@@ -138,59 +110,78 @@ export const DataTable = ({
         </div>
       ) : (
         <>
-          {/* ================= MOBILE CARDS VIEW (md:hidden when viewMode is 'cards' or 'auto') ================= */}
-          <div className={`${viewMode === 'table' ? 'hidden' : 'md:hidden'} p-2 sm:p-3.5 space-y-2.5 sm:space-y-3 bg-slate-50/50`}>
-            {paginatedData.map((row, rowIndex) => (
-              <div
-                key={row[keyField] || rowIndex}
-                className="bg-white rounded-xl border border-slate-200/90 p-3 sm:p-4 shadow-sm space-y-3 hover:border-brand-300 transition-all"
-              >
-                {/* Header row: Primary column + Status or ID */}
-                <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-100">
-                  <div className="min-w-0 flex-1">
-                    {nonActionColumns[0] && (
-                      <div className="text-xs font-bold text-slate-900">
-                        {nonActionColumns[0].render
-                          ? nonActionColumns[0].render(row[nonActionColumns[0].key], row, rowIndex)
-                          : row[nonActionColumns[0].key]}
-                      </div>
-                    )}
-                    {nonActionColumns[1] && (
-                      <div className="mt-1 text-[11px] text-slate-600">
-                        {nonActionColumns[1].render
-                          ? nonActionColumns[1].render(row[nonActionColumns[1].key], row, rowIndex)
-                          : row[nonActionColumns[1].key]}
-                      </div>
-                    )}
-                  </div>
-                </div>
+          {/* ================= MOBILE CARDS VIEW (Strictly md:hidden) ================= */}
+          <div className="md:hidden p-2.5 sm:p-3.5 space-y-2.5 bg-slate-50/60">
+            {paginatedData.map((row, rowIndex) => {
+              // Extract status render if exists
+              const statusRender = statusColumn
+                ? statusColumn.render
+                  ? statusColumn.render(row[statusColumn.key], row, rowIndex)
+                  : row[statusColumn.key]
+                : null;
 
-                {/* Body details grid */}
-                <div className="grid grid-cols-2 gap-2.5 text-[11px]">
-                  {nonActionColumns.slice(2).map((col, idx) => (
-                    <div key={col.key || idx} className="space-y-0.5">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
-                        {col.label}
-                      </span>
-                      <div className="text-slate-700 font-medium break-words">
-                        {col.render ? col.render(row[col.key], row, rowIndex) : row[col.key]}
-                      </div>
+              // Remaining detail columns excluding primary (idx 0), secondary (idx 1), and status
+              const detailColumns = nonActionColumns.slice(1).filter((c) => c !== statusColumn);
+
+              return (
+                <div
+                  key={row[keyField] || rowIndex}
+                  className="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-sm space-y-3 hover:border-brand-300 transition-all active:bg-slate-50/30"
+                >
+                  {/* Card Header: Primary info + Status badge */}
+                  <div className="flex items-start justify-between gap-2.5 pb-2.5 border-b border-slate-100">
+                    <div className="min-w-0 flex-1">
+                      {nonActionColumns[0] && (
+                        <div className="text-sm font-bold text-slate-900 leading-snug break-words">
+                          {nonActionColumns[0].render
+                            ? nonActionColumns[0].render(row[nonActionColumns[0].key], row, rowIndex)
+                            : row[nonActionColumns[0].key]}
+                        </div>
+                      )}
+                      {nonActionColumns[1] && nonActionColumns[1] !== statusColumn && (
+                        <div className="mt-0.5 text-xs text-slate-500 font-medium break-words">
+                          {nonActionColumns[1].render
+                            ? nonActionColumns[1].render(row[nonActionColumns[1].key], row, rowIndex)
+                            : row[nonActionColumns[1].key]}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-
-                {/* Actions row along the bottom */}
-                {actionColumn && (
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
-                    {actionColumn.render ? actionColumn.render(row[actionColumn.key], row, rowIndex) : row[actionColumn.key]}
+                    {statusRender && (
+                      <div className="flex-shrink-0 pt-0.5">
+                        {statusRender}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {/* Card Body: 2-Column Clean Key-Value Grid */}
+                  {detailColumns.length > 0 && (
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                      {detailColumns.map((col, idx) => (
+                        <div key={col.key || idx} className="space-y-0.5 min-w-0">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block truncate">
+                            {col.label}
+                          </span>
+                          <div className="text-slate-800 font-semibold break-words leading-tight">
+                            {col.render ? col.render(row[col.key], row, rowIndex) : (row[col.key] || '—')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Card Actions: Full-width touch-friendly actions */}
+                  {actionColumn && (
+                    <div className="pt-2.5 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
+                      {actionColumn.render ? actionColumn.render(row[actionColumn.key], row, rowIndex) : row[actionColumn.key]}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
-          {/* ================= DESKTOP TABLE VIEW (Always on md+, or on mobile when viewMode === 'table') ================= */}
-          <div className={`${viewMode === 'table' ? 'block' : 'hidden md:block'} overflow-x-auto min-h-[300px]`}>
+          {/* ================= DESKTOP TABLE VIEW (Strictly hidden md:block) ================= */}
+          <div className="hidden md:block overflow-x-auto min-h-[300px]">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/95 border-b border-slate-200 text-slate-600 uppercase font-bold tracking-wider text-[11px] select-none sticky top-0 z-10 backdrop-blur-xs">

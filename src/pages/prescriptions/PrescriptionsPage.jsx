@@ -561,13 +561,27 @@ export const PrescriptionsPage = () => {
               </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {formData.medicines.map((med, idx) => (
                 <div
                   key={med.id || idx}
-                  className="grid grid-cols-12 gap-2 items-center p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs"
+                  className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2.5"
                 >
-                  <div className="col-span-12 sm:col-span-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                      Medicine #{idx + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeMedicineRow(idx)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                      title="Remove medicine"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="w-full">
                     <SearchableSelect
                       allowCustom={true}
                       value={med.name}
@@ -586,7 +600,7 @@ export const PrescriptionsPage = () => {
                       }}
                       placeholder="Select or type medicine..."
                       searchPlaceholder="Search 25+ medicines..."
-                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs font-semibold bg-white"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold bg-white"
                       options={commonMedicines.map((m) => ({
                         value: m.name,
                         label: m.name,
@@ -595,55 +609,43 @@ export const PrescriptionsPage = () => {
                     />
                   </div>
 
-                  <div className="col-span-6 sm:col-span-2">
-                    <input
-                      type="text"
-                      placeholder="Dosage (500mg)"
-                      value={med.dosage}
-                      onChange={(e) => updateMedicineRow(idx, 'dosage', e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs bg-white"
-                    />
-                  </div>
-
-                  <div className="col-span-6 sm:col-span-2">
-                    <input
-                      type="text"
-                      placeholder="Freq (1-0-1)"
-                      value={med.frequency}
-                      onChange={(e) => updateMedicineRow(idx, 'frequency', e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs bg-white"
-                    />
-                  </div>
-
-                  <div className="col-span-6 sm:col-span-2">
-                    <input
-                      type="text"
-                      placeholder="Duration (7 days)"
-                      value={med.duration}
-                      onChange={(e) => updateMedicineRow(idx, 'duration', e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs bg-white"
-                    />
-                  </div>
-
-                  <div className="col-span-5 sm:col-span-2">
-                    <input
-                      type="text"
-                      placeholder="Instructions (after meals)"
-                      value={med.instructions}
-                      onChange={(e) => updateMedicineRow(idx, 'instructions', e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs bg-white"
-                    />
-                  </div>
-
-                  <div className="col-span-1 text-right">
-                    <button
-                      type="button"
-                      onClick={() => removeMedicineRow(idx)}
-                      className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
-                      title="Remove medicine"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Dosage (500mg)"
+                        value={med.dosage}
+                        onChange={(e) => updateMedicineRow(idx, 'dosage', e.target.value)}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Freq (1-0-1)"
+                        value={med.frequency}
+                        onChange={(e) => updateMedicineRow(idx, 'frequency', e.target.value)}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Duration (7 days)"
+                        value={med.duration}
+                        onChange={(e) => updateMedicineRow(idx, 'duration', e.target.value)}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Instructions (after meals)"
+                        value={med.instructions}
+                        onChange={(e) => updateMedicineRow(idx, 'instructions', e.target.value)}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -673,36 +675,30 @@ export const PrescriptionsPage = () => {
                 {formData.tests.map((test, idx) => (
                   <div
                     key={test.id || idx}
-                    className="grid grid-cols-12 gap-2 items-center p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs"
+                    className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs"
                   >
-                    <div className="col-span-6">
-                      <input
-                        type="text"
-                        placeholder="Test Name (e.g. Serum Creatinine)"
-                        value={test.name}
-                        onChange={(e) => updateTestRow(idx, 'name', e.target.value)}
-                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs bg-white font-medium"
-                      />
-                    </div>
-                    <div className="col-span-5">
-                      <input
-                        type="text"
-                        placeholder="Clinical instructions (e.g. 12hr fasting)"
-                        value={test.instructions}
-                        onChange={(e) => updateTestRow(idx, 'instructions', e.target.value)}
-                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs bg-white"
-                      />
-                    </div>
-                    <div className="col-span-1 text-right">
-                      <button
-                        type="button"
-                        onClick={() => removeTestRow(idx)}
-                        className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
-                        title="Remove test"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <input
+                      type="text"
+                      placeholder="Test Name (e.g. Serum Creatinine)"
+                      value={test.name}
+                      onChange={(e) => updateTestRow(idx, 'name', e.target.value)}
+                      className="flex-1 px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white font-medium"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Clinical instructions (e.g. 12hr fasting)"
+                      value={test.instructions}
+                      onChange={(e) => updateTestRow(idx, 'instructions', e.target.value)}
+                      className="flex-1 px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeTestRow(idx)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors self-end sm:self-center"
+                      title="Remove test"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -737,29 +733,29 @@ export const PrescriptionsPage = () => {
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-4 border-t border-slate-100">
             <button
               type="button"
               onClick={() => handleSavePrescription(true)}
-              className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
             >
               Save as Draft
             </button>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setIsEditorOpen(false)}
-                className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50"
+                className="flex-1 sm:flex-initial px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold shadow-sm shadow-brand-500/20 transition-all flex items-center gap-1.5"
+                className="flex-1 sm:flex-initial px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/20 transition-all flex items-center justify-center gap-1.5 min-h-[44px]"
               >
                 <Check className="w-4 h-4 stroke-[2.5]" />
-                <span>Save & Finalize Prescription</span>
+                <span>Save Prescription</span>
               </button>
             </div>
           </div>

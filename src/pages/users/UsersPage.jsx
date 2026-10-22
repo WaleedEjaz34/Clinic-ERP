@@ -357,13 +357,13 @@ export const UsersPage = () => {
               </p>
             </div>
 
-            {/* Role Selector Tabs */}
-            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+            {/* Role Selector Tabs (Mobile Scrollable) */}
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full no-scrollbar">
               {ROLES.map((role) => (
                 <button
                   key={role}
                   onClick={() => setSelectedRoleForMatrix(role)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                     selectedRoleForMatrix === role
                       ? 'bg-brand-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
@@ -375,8 +375,59 @@ export const UsersPage = () => {
             </div>
           </div>
 
-          {/* Matrix Grid */}
-          <div className="overflow-x-auto">
+          {/* ================= MOBILE RBAC PERMISSION CARDS (md:hidden) ================= */}
+          <div className="md:hidden space-y-3">
+            {MODULES.map((mod) => {
+              const representativeUser = users.find((u) => u.role === selectedRoleForMatrix);
+              const currentPerms = representativeUser?.permissions?.[mod.key] || [];
+
+              return (
+                <div
+                  key={mod.key}
+                  className="bg-slate-50/70 rounded-2xl border border-slate-200 p-3.5 space-y-2.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900">{mod.label}</span>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      {currentPerms.length} granted
+                    </span>
+                  </div>
+
+                  {/* Toggleable Permission Chips */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {PERMISSIONS.map((perm) => {
+                      const isGranted = currentPerms.includes(perm);
+                      return (
+                        <button
+                          key={perm}
+                          type="button"
+                          onClick={() =>
+                            updateUserPermissions(
+                              selectedRoleForMatrix,
+                              mod.key,
+                              perm,
+                              !isGranted
+                            )
+                          }
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                            isGranted
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs font-bold'
+                              : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <Check className={`w-3 h-3 ${isGranted ? 'text-emerald-600 stroke-[3]' : 'opacity-0'}`} />
+                          <span className="capitalize">{perm === 'print' ? 'Print' : perm}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ================= DESKTOP MATRIX TABLE (hidden md:block) ================= */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 uppercase font-semibold text-[11px]">
                 <tr>
@@ -583,17 +634,17 @@ export const UsersPage = () => {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setIsAddEditOpen(false)}
-              className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex-1 sm:flex-initial px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm shadow-brand-500/20 transition-all"
+              className="flex-1 sm:flex-initial px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/20 transition-all min-h-[44px]"
             >
               {editingUser ? 'Update Staff User' : 'Save Staff User'}
             </button>

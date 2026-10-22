@@ -537,131 +537,244 @@ export const AppointmentsPage = () => {
 
           {/* Month Calendar Grid */}
           {calendarMode === 'month' && (
-            <div className="overflow-x-auto">
-              <div className="min-w-[640px] sm:min-w-0">
-              {/* Day headers */}
-              <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100/70 text-center py-2 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                <div>Mon</div>
-                <div>Tue</div>
-                <div>Wed</div>
-                <div>Thu</div>
-                <div>Fri</div>
-                <div>Sat</div>
-                <div>Sun</div>
-              </div>
+            <>
+              {/* Desktop Month Grid (hidden sm:block) */}
+              <div className="hidden sm:block overflow-x-auto">
+                <div className="min-w-0">
+                  {/* Day headers */}
+                  <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100/70 text-center py-2 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                    <div>Sun</div>
+                  </div>
 
-              {/* Day cells */}
-              <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100">
-                {calendarDays.map((day, idx) => {
-                  const dayStr = format(day, 'yyyy-MM-dd');
-                  const dayApts = appointments.filter((a) => a.date === dayStr);
-                  const isCurrentMonth = isSameMonth(day, currentDate);
-                  const isToday = isSameDay(day, new Date());
+                  {/* Day cells */}
+                  <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100">
+                    {calendarDays.map((day, idx) => {
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const dayApts = appointments.filter((a) => a.date === dayStr);
+                      const isCurrentMonth = isSameMonth(day, currentDate);
+                      const isToday = isSameDay(day, new Date());
 
-                  return (
-                    <div
-                      key={idx}
-                      className={`min-h-[110px] p-1.5 flex flex-col justify-between transition-colors hover:bg-slate-50/80 cursor-pointer ${
-                        !isCurrentMonth ? 'bg-slate-50/50 text-slate-300' : 'bg-white text-slate-800'
-                      }`}
-                      onClick={() => handleOpenBook(dayStr)}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span
-                          className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
-                            isToday ? 'bg-brand-600 text-white' : ''
+                      return (
+                        <div
+                          key={idx}
+                          className={`min-h-[110px] p-1.5 flex flex-col justify-between transition-colors hover:bg-slate-50/80 cursor-pointer ${
+                            !isCurrentMonth ? 'bg-slate-50/50 text-slate-300' : 'bg-white text-slate-800'
                           }`}
+                          onClick={() => handleOpenBook(dayStr)}
                         >
-                          {format(day, 'd')}
-                        </span>
-                        {dayApts.length > 0 && (
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            {dayApts.length} apts
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Day appointment pills */}
-                      <div className="space-y-1 flex-1 overflow-y-auto max-h-24">
-                        {dayApts.map((apt) => (
-                          <div
-                            key={apt.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setViewingApt(apt);
-                              setIsDetailModalOpen(true);
-                            }}
-                            className={`p-1 rounded text-[10px] leading-tight truncate border font-medium ${
-                              apt.status === 'Completed'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                : apt.status === 'Waiting' || apt.status === 'Checked-In'
-                                ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                : apt.status === 'Cancelled'
-                                ? 'bg-rose-50 text-rose-800 border-rose-200'
-                                : 'bg-blue-50 text-blue-800 border-blue-200'
-                            }`}
-                            title={`${apt.time} - ${apt.patientName} (${apt.doctorName})`}
-                          >
-                            <strong>{apt.time}</strong> {apt.patientName}
+                          <div className="flex items-center justify-between mb-1">
+                            <span
+                              className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                                isToday ? 'bg-brand-600 text-white' : ''
+                              }`}
+                            >
+                              {format(day, 'd')}
+                            </span>
+                            {dayApts.length > 0 && (
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {dayApts.length} apts
+                              </span>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+
+                          {/* Day appointment pills */}
+                          <div className="space-y-1 flex-1 overflow-y-auto max-h-24">
+                            {dayApts.map((apt) => (
+                              <div
+                                key={apt.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewingApt(apt);
+                                  setIsDetailModalOpen(true);
+                                }}
+                                className={`p-1 rounded text-[10px] leading-tight truncate border font-medium ${
+                                  apt.status === 'Completed'
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                    : apt.status === 'Waiting' || apt.status === 'Checked-In'
+                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                    : apt.status === 'Cancelled'
+                                    ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                    : 'bg-blue-50 text-blue-800 border-blue-200'
+                                }`}
+                                title={`${apt.time} - ${apt.patientName} (${apt.doctorName})`}
+                              >
+                                <strong>{apt.time}</strong> {apt.patientName}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          )}
 
-          {/* Week View */}
-          {calendarMode === 'week' && (
-            <div className="overflow-x-auto">
-              <div className="min-w-[640px] sm:min-w-0 grid grid-cols-7 divide-x divide-slate-200">
-              {weekDays.map((day, idx) => {
-                const dayStr = format(day, 'yyyy-MM-dd');
-                const dayApts = appointments.filter((a) => a.date === dayStr);
-                const isToday = isSameDay(day, new Date());
+              {/* Mobile Month Agenda View (sm:hidden) */}
+              <div className="sm:hidden p-3.5 space-y-3 bg-slate-50/50">
+                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-xs font-bold text-slate-900">
+                    Agenda: {format(currentDate, 'MMMM yyyy')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenBook(format(currentDate, 'yyyy-MM-dd'))}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-brand-600 rounded-lg shadow-2xs"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Book</span>
+                  </button>
+                </div>
 
-                return (
-                  <div key={idx} className="min-h-[350px] p-2 flex flex-col">
-                    <div className="text-center pb-2 border-b border-slate-100 mb-2">
-                      <span className="text-[11px] font-bold uppercase text-slate-400 block">
-                        {format(day, 'EEE')}
-                      </span>
-                      <span
-                        className={`text-sm font-bold inline-block px-2 py-0.5 rounded-full ${
-                          isToday ? 'bg-brand-600 text-white' : 'text-slate-800'
-                        }`}
-                      >
-                        {format(day, 'dd MMM')}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 flex-1 overflow-y-auto">
-                      {dayApts.map((apt) => (
+                {appointments.filter((a) => a.date.startsWith(format(currentDate, 'yyyy-MM'))).length === 0 ? (
+                  <div className="text-center py-8 px-4 bg-white rounded-2xl border border-slate-200">
+                    <p className="text-xs text-slate-500 font-medium">No appointments for {format(currentDate, 'MMMM yyyy')}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {appointments
+                      .filter((a) => a.date.startsWith(format(currentDate, 'yyyy-MM')))
+                      .map((apt) => (
                         <div
                           key={apt.id}
                           onClick={() => {
                             setViewingApt(apt);
                             setIsDetailModalOpen(true);
                           }}
-                          className="p-2 rounded-lg bg-slate-50 border border-slate-200 hover:border-brand-300 transition-colors cursor-pointer text-xs space-y-1"
+                          className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2 active:bg-slate-50"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-brand-600">{apt.time}</span>
+                            <span className="text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-md">
+                              {apt.date} • {apt.time}
+                            </span>
                             <StatusBadge status={apt.status} />
                           </div>
-                          <p className="font-bold text-slate-900 truncate">{apt.patientName}</p>
-                          <p className="text-[11px] text-slate-500 truncate">{apt.doctorName}</p>
+                          <div>
+                            <span className="text-sm font-bold text-slate-900 block">{apt.patientName}</span>
+                            <span className="text-xs text-slate-500">Dr. {apt.doctorName} • {apt.visitType}</span>
+                          </div>
                         </div>
                       ))}
-                    </div>
                   </div>
-                );
-              })}
+                )}
               </div>
-            </div>
+            </>
+          )}
+
+          {/* Week View */}
+          {calendarMode === 'week' && (
+            <>
+              {/* Desktop Week View (hidden sm:block) */}
+              <div className="hidden sm:block overflow-x-auto">
+                <div className="min-w-0 grid grid-cols-7 divide-x divide-slate-200">
+                  {weekDays.map((day, idx) => {
+                    const dayStr = format(day, 'yyyy-MM-dd');
+                    const dayApts = appointments.filter((a) => a.date === dayStr);
+                    const isToday = isSameDay(day, new Date());
+
+                    return (
+                      <div key={idx} className="min-h-[350px] p-2 flex flex-col">
+                        <div className="text-center pb-2 border-b border-slate-100 mb-2">
+                          <span className="text-[11px] font-bold uppercase text-slate-400 block">
+                            {format(day, 'EEE')}
+                          </span>
+                          <span
+                            className={`text-sm font-bold inline-block px-2 py-0.5 rounded-full ${
+                              isToday ? 'bg-brand-600 text-white' : 'text-slate-800'
+                            }`}
+                          >
+                            {format(day, 'dd MMM')}
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 flex-1 overflow-y-auto">
+                          {dayApts.map((apt) => (
+                            <div
+                              key={apt.id}
+                              onClick={() => {
+                                setViewingApt(apt);
+                                setIsDetailModalOpen(true);
+                              }}
+                              className="p-2 rounded-lg bg-slate-50 border border-slate-200 hover:border-brand-300 transition-colors cursor-pointer text-xs space-y-1"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-brand-600">{apt.time}</span>
+                                <StatusBadge status={apt.status} />
+                              </div>
+                              <p className="font-bold text-slate-900 truncate">{apt.patientName}</p>
+                              <p className="text-[11px] text-slate-500 truncate">{apt.doctorName}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Mobile Week Day-by-Day Accordion/Cards (sm:hidden) */}
+              <div className="sm:hidden p-3.5 space-y-2.5 bg-slate-50/50">
+                {weekDays.map((day, idx) => {
+                  const dayStr = format(day, 'yyyy-MM-dd');
+                  const dayApts = appointments.filter((a) => a.date === dayStr);
+                  const isToday = isSameDay(day, new Date());
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`bg-white rounded-2xl border p-3 space-y-2 shadow-2xs ${
+                        isToday ? 'border-brand-300 bg-brand-50/20' : 'border-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                              isToday ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-800'
+                            }`}
+                          >
+                            {format(day, 'EEE, dd MMM')}
+                          </span>
+                          {isToday && (
+                            <span className="text-[10px] font-bold text-brand-600 uppercase">Today</span>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-slate-500 font-medium">
+                          {dayApts.length} slot{dayApts.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+
+                      {dayApts.length > 0 && (
+                        <div className="space-y-1.5 pt-1 border-t border-slate-100">
+                          {dayApts.map((apt) => (
+                            <div
+                              key={apt.id}
+                              onClick={() => {
+                                setViewingApt(apt);
+                                setIsDetailModalOpen(true);
+                              }}
+                              className="p-2 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs active:bg-slate-100"
+                            >
+                              <div>
+                                <span className="font-bold text-brand-700">{apt.time}</span>
+                                <span className="ml-2 font-semibold text-slate-900">{apt.patientName}</span>
+                                <p className="text-[11px] text-slate-500">{apt.doctorName}</p>
+                              </div>
+                              <StatusBadge status={apt.status} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
 
           {/* Day View */}
@@ -860,17 +973,17 @@ export const AppointmentsPage = () => {
             />
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setIsBookModalOpen(false)}
-              className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex-1 sm:flex-initial px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm shadow-brand-500/20 transition-all"
+              className="flex-1 sm:flex-initial px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/20 transition-all min-h-[44px]"
             >
               {editingApt ? 'Save Changes' : 'Confirm Slot Booking'}
             </button>

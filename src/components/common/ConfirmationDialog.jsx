@@ -25,7 +25,7 @@ export const ConfirmationDialog = ({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors min-h-[44px]"
           >
             {cancelText}
           </button>
@@ -33,10 +33,10 @@ export const ConfirmationDialog = ({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className={`px-4 py-2 text-xs font-medium text-white rounded-lg transition-colors ${
+            className={`flex-1 sm:flex-initial px-5 py-2.5 text-xs font-bold text-white rounded-xl transition-colors min-h-[44px] shadow-sm ${
               type === 'danger'
-                ? 'bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-rose-500'
-                : 'bg-brand-600 hover:bg-brand-700 focus:ring-2 focus:ring-brand-500'
+                ? 'bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-rose-500 shadow-rose-500/20'
+                : 'bg-brand-600 hover:bg-brand-700 focus:ring-2 focus:ring-brand-500 shadow-brand-500/20'
             }`}
           >
             {isLoading ? 'Processing...' : confirmText}
