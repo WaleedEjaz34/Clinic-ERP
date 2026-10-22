@@ -1,0 +1,477 @@
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { formatDate, formatTime } from '../utils/date';
+import { formatCurrency } from '../utils/currency';
+
+const CLINIC_INFO = {
+  name: 'MedPulse Executive Healthcare Clinic',
+  address: 'Plot 14-B, Executive Sector F-8 Markaz, Islamabad, Pakistan',
+  phone: '+92 51 2289001 / +92 300 8472910',
+  email: 'info@medpulse.pk',
+  regNo: 'PMDC / PHC Reg: ISB-88392-C',
+};
+
+// ==========================================
+// 1. PRESCRIPTION PDF GENERATOR
+// ==========================================
+export const generatePrescriptionPDF = (rx) => {
+  const doc = new jsPDF();
+
+  // Header Banner
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, 210, 32, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(CLINIC_INFO.name, 14, 13);
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225); // slate-300
+  doc.text(`${CLINIC_INFO.address} | Phone: ${CLINIC_INFO.phone}`, 14, 20);
+  doc.text(`${CLINIC_INFO.email} | ${CLINIC_INFO.regNo}`, 14, 26);
+
+  // Subheader: Document Title & Metadata
+  doc.setFillColor(241, 245, 249);
+  doc.rect(14, 36, 182, 24, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(14, 36, 182, 24, 'S');
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('MEDICAL PRESCRIPTION', 18, 44);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Prescription #: ${rx.id}`, 18, 51);
+  doc.text(`Date: ${formatDate(rx.prescriptionDate)}`, 18, 56);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Doctor: ${rx.doctorName}`, 110, 44);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Patient: ${rx.patientName} (${rx.patientId})`, 110, 51);
+  doc.text(`Appointment Ref: ${rx.appointmentId || 'Walk-in'}`, 110, 56);
+
+  // Clinical Details
+  let currentY = 66;
+
+  if (rx.complaint) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Chief Complaints / Symptoms:', 14, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.text(rx.complaint, 14, currentY + 5, { maxWidth: 182 });
+    currentY += 14;
+  }
+
+  if (rx.diagnosis) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Clinical Diagnosis:', 14, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(15, 118, 110); // teal-700
+    doc.text(rx.diagnosis, 14, currentY + 5, { maxWidth: 182 });
+    currentY += 15;
+  }
+
+  // Medicines Table (Rx)
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('Rx - Prescribed Medicines', 14, currentY);
+  currentY += 3;
+
+  const tableBody = (rx.medicines || []).map((m, idx) => [
+    idx + 1,
+    m.name,
+    m.dosage,
+    m.frequency,
+    m.duration,
+    m.instructions || '—',
+  ]);
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [['#', 'Medicine Name', 'Dosage', 'Frequency', 'Duration', 'Instructions']],
+    body: tableBody.length > 0 ? tableBody : [['-', 'No oral medications prescribed', '-', '-', '-', '-']],
+    theme: 'striped',
+    headStyles: { fillColor: [14, 142, 233], textColor: [255, 255, 255], fontStyle: 'bold' },
+    styles: { fontSize: 8.5, cellPadding: 2.5 },
+  });
+
+  currentY = doc.lastAutoTable.finalY + 10;
+
+  // Investigations & Tests
+  if (rx.tests && rx.tests.length > 0) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Advised Diagnostic Tests / Investigations:', 14, currentY);
+    currentY += 5;
+
+    rx.tests.forEach((t) => {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(51, 65, 85);
+      doc.text(`• ${t.name}`, 18, currentY);
+      if (t.instructions) {
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 139);
+        doc.text(`  (${t.instructions})`, 18 + doc.getTextWidth(`• ${t.name} `), currentY);
+      }
+      currentY += 5.5;
+    });
+    currentY += 4;
+  }
+
+  // Doctor Notes & Follow up
+  if (rx.doctorNotes) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Doctor Dietary & General Advice:', 14, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(rx.doctorNotes, 14, currentY + 5, { maxWidth: 182 });
+    currentY += 14;
+  }
+
+  if (rx.followUpDate) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(2, 112, 199);
+    doc.text(`Next Follow-up Review: ${formatDate(rx.followUpDate)}`, 14, currentY);
+  }
+
+  // Signature Block at Bottom
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.line(140, 265, 195, 265);
+  doc.text('Authorized Doctor Signature', 142, 271);
+  doc.text(rx.doctorName, 142, 276);
+
+  // Footer
+  doc.setFontSize(7.5);
+  doc.setTextColor(148, 163, 184);
+  doc.text('This is an official computerized prescription generated by MedPulse Clinic ERP.', 14, 285);
+
+  doc.save(`Prescription_${rx.id}_${rx.patientName.replace(/\s+/g, '_')}.pdf`);
+};
+
+// ==========================================
+// 2. PATIENT BILL PDF GENERATOR
+// ==========================================
+export const generateBillPDF = (bill) => {
+  const doc = new jsPDF();
+
+  // Header Banner
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, 210, 32, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(CLINIC_INFO.name, 14, 13);
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225);
+  doc.text(`${CLINIC_INFO.address} | Phone: ${CLINIC_INFO.phone}`, 14, 20);
+  doc.text(`NTN: 8847291-3 | ${CLINIC_INFO.regNo}`, 14, 26);
+
+  // Bill Title box
+  doc.setFillColor(248, 250, 252);
+  doc.rect(14, 36, 182, 26, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(14, 36, 182, 26, 'S');
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PATIENT INVOICE / BILL', 18, 44);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Bill Number: ${bill.billNumber}`, 18, 51);
+  doc.text(`Date of Invoice: ${formatDate(bill.billDate)}`, 18, 57);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Patient Name: ${bill.patientName} (${bill.patientId})`, 110, 44);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Attending Doctor: ${bill.doctorName}`, 110, 51);
+  doc.text(`Appointment Ref: ${bill.appointmentId || 'Walk-in Visit'}`, 110, 57);
+
+  // Status Watermark or Stamp
+  const statusColor = bill.status === 'Paid' ? [16, 185, 129] : bill.status === 'Partially Paid' ? [245, 158, 11] : [239, 68, 68];
+  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(`[ ${bill.status.toUpperCase()} ]`, 160, 44);
+
+  // Itemized Services
+  const items = (bill.items && bill.items.length > 0)
+    ? bill.items.map((it, idx) => [idx + 1, it.description, formatCurrency(it.amount)])
+    : [
+        [1, 'Consultation Fee', formatCurrency(bill.consultationFee)],
+        bill.procedureCharges > 0 && [2, 'Medical / Procedure Charges', formatCurrency(bill.procedureCharges)],
+        bill.testCharges > 0 && [3, 'Diagnostic Tests / Lab Services', formatCurrency(bill.testCharges)],
+        bill.otherCharges > 0 && [4, 'Other Clinic Services', formatCurrency(bill.otherCharges)],
+      ].filter(Boolean);
+
+  autoTable(doc, {
+    startY: 68,
+    head: [['#', 'Service Description', 'Amount (PKR)']],
+    body: items,
+    theme: 'grid',
+    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
+    styles: { fontSize: 9, cellPadding: 3 },
+    columnStyles: {
+      0: { cellWidth: 15, halign: 'center' },
+      1: { cellWidth: 125 },
+      2: { cellWidth: 42, halign: 'right' }
+    }
+  });
+
+  let totalsY = doc.lastAutoTable.finalY + 6;
+
+  // Totals Breakdown box
+  doc.setFillColor(248, 250, 252);
+  doc.rect(110, totalsY, 86, 42, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(110, totalsY, 86, 42, 'S');
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+
+  doc.text('Discount Applied:', 114, totalsY + 8);
+  doc.text(`- ${formatCurrency(bill.discount)}`, 190, totalsY + 8, { align: 'right' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text('Total Invoice Amount:', 114, totalsY + 16);
+  doc.text(formatCurrency(bill.totalAmount), 190, totalsY + 16, { align: 'right' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(16, 185, 129); // green
+  doc.text('Amount Received (Paid):', 114, totalsY + 24);
+  doc.text(formatCurrency(bill.paidAmount), 190, totalsY + 24, { align: 'right' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(220, 38, 38); // red
+  doc.text('Outstanding Balance Due:', 114, totalsY + 34);
+  doc.text(formatCurrency(bill.balanceDue), 190, totalsY + 34, { align: 'right' });
+
+  // Notes & Payment instructions
+  if (bill.notes) {
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Notes: ${bill.notes}`, 14, totalsY + 10, { maxWidth: 90 });
+  }
+
+  // Signatures
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 116, 139);
+  doc.line(14, 250, 60, 250);
+  doc.text('Patient / Attendant Signature', 14, 256);
+
+  doc.line(140, 250, 195, 250);
+  doc.text('Authorized Cashier / Accounts', 140, 256);
+
+  // Footer
+  doc.setFontSize(7.5);
+  doc.setTextColor(148, 163, 184);
+  doc.text('Thank you for choosing MedPulse Clinic. Computer-generated official invoice.', 14, 285);
+
+  doc.save(`Invoice_${bill.billNumber}_${bill.patientName.replace(/\s+/g, '_')}.pdf`);
+};
+
+// ==========================================
+// 3. PAYMENT RECEIPT PDF GENERATOR
+// ==========================================
+export const generatePaymentReceiptPDF = (payment) => {
+  const doc = new jsPDF();
+
+  // Header Banner
+  doc.setFillColor(13, 148, 136); // teal-600
+  doc.rect(0, 0, 210, 30, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(CLINIC_INFO.name, 14, 12);
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`OFFICIAL CASH & DIGITAL PAYMENT RECEIPT`, 14, 19);
+  doc.text(`${CLINIC_INFO.address} | Phone: ${CLINIC_INFO.phone}`, 14, 25);
+
+  // Receipt details card
+  doc.setFillColor(248, 250, 252);
+  doc.rect(14, 38, 182, 38, 'F');
+  doc.setDrawColor(203, 213, 225);
+  doc.rect(14, 38, 182, 38, 'S');
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Receipt #: ${payment.receiptNumber}`, 20, 48);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Payment Date: ${formatDate(payment.paymentDate)}`, 20, 56);
+  doc.text(`Payment Method: ${payment.paymentMethod}`, 20, 64);
+  doc.text(`Reference / Transaction ID: ${payment.referenceNumber || 'N/A'}`, 20, 71);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Received From: ${payment.patientName} (${payment.patientId})`, 110, 48);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Against Bill: ${payment.billNumber}`, 110, 56);
+  doc.text(`Deposited Account: ${payment.accountName}`, 110, 64);
+  doc.text(`Received By: ${payment.receivedBy || 'Accounts Desk'}`, 110, 71);
+
+  // Big Amount Display Box
+  doc.setFillColor(240, 253, 250); // teal-50
+  doc.rect(14, 84, 182, 30, 'F');
+  doc.setDrawColor(13, 148, 136);
+  doc.setLineWidth(0.5);
+  doc.rect(14, 84, 182, 30, 'S');
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TOTAL AMOUNT RECEIVED:', 20, 95);
+
+  doc.setFontSize(18);
+  doc.setTextColor(13, 148, 136);
+  doc.text(formatCurrency(payment.amount), 20, 107);
+
+  if (payment.notes) {
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Remarks / Notes: ${payment.notes}`, 14, 126);
+  }
+
+  // Signature Block
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 116, 139);
+  doc.line(140, 180, 195, 180);
+  doc.text('Authorized Signature / Cashier Stamp', 140, 186);
+  doc.text(payment.receivedBy || 'MedPulse Accounts', 140, 191);
+
+  doc.setFontSize(7.5);
+  doc.setTextColor(148, 163, 184);
+  doc.text('Payment received with thanks. Retain this computerized receipt for insurance/tax claims.', 14, 210);
+
+  doc.save(`Receipt_${payment.receiptNumber}.pdf`);
+};
+
+// ==========================================
+// 4. EXPENSE VOUCHER PDF GENERATOR
+// ==========================================
+export const generateExpenseVoucherPDF = (expense) => {
+  const doc = new jsPDF();
+
+  // Header Banner
+  doc.setFillColor(71, 85, 105); // slate-600
+  doc.rect(0, 0, 210, 30, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(CLINIC_INFO.name, 14, 12);
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('INTERNAL PAYMENT / EXPENSE DISBURSEMENT VOUCHER', 14, 19);
+  doc.text(`${CLINIC_INFO.address}`, 14, 25);
+
+  // Voucher box
+  doc.setFillColor(248, 250, 252);
+  doc.rect(14, 38, 182, 36, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(14, 38, 182, 36, 'S');
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Voucher ID: ${expense.id}`, 20, 48);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Date of Expense: ${formatDate(expense.expenseDate)}`, 20, 56);
+  doc.text(`Category: ${expense.categoryName}`, 20, 64);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Disbursed From: ${expense.accountName}`, 110, 48);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Reference #: ${expense.reference || '—'}`, 110, 56);
+  doc.text(`Authorized By: ${expense.authorizedBy || 'Medical Director'}`, 110, 64);
+
+  // Expense Description
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Particulars / Expense Description:', 14, 86);
+
+  doc.setFillColor(255, 255, 255);
+  doc.rect(14, 91, 182, 28, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(14, 91, 182, 28, 'S');
+
+  doc.setFontSize(9.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text(expense.description || 'No description provided', 18, 100, { maxWidth: 174 });
+
+  // Amount Block
+  doc.setFillColor(254, 242, 242); // red-50
+  doc.rect(14, 126, 182, 25, 'F');
+  doc.setDrawColor(239, 68, 68);
+  doc.rect(14, 126, 182, 25, 'S');
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DISBURSED AMOUNT:', 20, 137);
+
+  doc.setFontSize(16);
+  doc.setTextColor(220, 38, 38);
+  doc.text(formatCurrency(expense.amount), 20, 146);
+
+  if (expense.attachmentName) {
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Supporting Attachment: ${expense.attachmentName}`, 14, 160);
+  }
+
+  // Signatures
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 116, 139);
+
+  doc.line(14, 210, 60, 210);
+  doc.text('Prepared By (Accounts)', 14, 216);
+
+  doc.line(80, 210, 130, 210);
+  doc.text('Receiver Signature / Thumb', 80, 216);
+
+  doc.line(145, 210, 195, 210);
+  doc.text('Approved By (Director)', 145, 216);
+  doc.text(expense.authorizedBy || 'Medical Director', 145, 221);
+
+  doc.save(`Voucher_${expense.reference || expense.id}.pdf`);
+};
