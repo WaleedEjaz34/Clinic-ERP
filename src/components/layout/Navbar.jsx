@@ -48,19 +48,12 @@ const MAIN_NAV_ITEMS = [
     path: '/',
     exact: true,
     icon: LayoutDashboard,
-    summary: 'Overview of clinic operations, appointments, patients, billing, payments, and other key activities.',
+    summary: 'Real-time overview of clinic operations, appointments, patients, and revenue.',
     subTabs: [
       { id: 'overview', name: 'Overview', path: '/', icon: LayoutDashboard },
-      { id: 'appointments', name: "Today's Appointments", path: '/?section=appointments', icon: Calendar },
-      { id: 'patients', name: 'Waiting Patients', path: '/?section=waiting', icon: Users },
-      { id: 'billing', name: 'Billing & Collection', path: '/?section=billing', icon: Receipt },
-      { id: 'expenses', name: 'Recent Expenses', path: '/?section=expenses', icon: TrendingDown },
     ],
     subItems: [
-      { name: 'Clinic Operations Overview', path: '/', icon: LayoutDashboard, description: 'Real-time KPIs, OPD queues, and financial summary' },
-      { name: 'Appointments Schedule', path: '/appointments', icon: Calendar, description: 'Daily appointment slots and queue status' },
-      { name: 'Patients Directory', path: '/patients', icon: Users, description: 'Active patient list and registered medical charts' },
-      { name: 'Billing & Payments Snapshot', path: '/bills', icon: Receipt, description: 'Recent bills, revenue, and cash collection' },
+      { name: 'Overview', path: '/', icon: LayoutDashboard, description: 'Real-time clinic operations, queues, and financial summary' },
     ],
   },
   {
@@ -69,18 +62,12 @@ const MAIN_NAV_ITEMS = [
     path: '/patients',
     icon: Users,
     subPaths: ['/patients'],
-    summary: 'Patient List, Add Patient, Patient Profile, Medical & Visit History.',
+    summary: 'Patient directory, electronic medical charts, profiles, and visit histories.',
     subTabs: [
       { id: 'list', name: 'Patient List', path: '/patients', icon: Users },
-      { id: 'add', name: '+ Add Patient', path: '/patients?action=new', icon: UserPlus, isAction: true },
-      { id: 'profile', name: 'Patient Profile', path: '/patients?tab=profile', icon: UserCheck },
-      { id: 'history', name: 'Medical & Visit History', path: '/patients?tab=history', icon: History },
     ],
     subItems: [
-      { name: 'Patient List', path: '/patients', icon: Users, description: 'Browse, search, and manage all registered patients' },
-      { name: 'Add Patient', path: '/patients?action=new', icon: UserPlus, description: 'Register new patient with medical history' },
-      { name: 'Patient Profile & 360 View', path: '/patients?tab=profile', icon: UserCheck, description: 'Electronic medical charts, vitals, and documents' },
-      { name: 'Medical & Visit History', path: '/patients?tab=history', icon: History, description: 'Complete chronological history of clinic visits' },
+      { name: 'Patient List', path: '/patients', icon: Users, description: 'Browse, search, and manage all registered patients and records' },
     ],
   },
   {
@@ -89,19 +76,16 @@ const MAIN_NAV_ITEMS = [
     path: '/appointments',
     icon: Calendar,
     subPaths: ['/appointments'],
-    summary: 'Appointments, Appointment Calendar, Doctor Schedule, Appointment Status.',
+    summary: 'Patient appointments, calendar scheduling grid, and doctor rosters.',
     subTabs: [
-      { id: 'list', name: 'Appointments List', path: '/appointments?view=list', icon: Calendar },
+      { id: 'list', name: 'Appointments List', path: '/appointments', icon: Calendar },
       { id: 'calendar', name: 'Appointment Calendar', path: '/appointments?view=calendar', icon: CalendarDays },
       { id: 'schedule', name: 'Doctor Schedule', path: '/doctors?from=appointments', icon: Stethoscope },
-      { id: 'status', name: 'Appointment Status', path: '/appointments?filter=status', icon: Clock },
-      { id: 'new', name: '+ Book Appointment', path: '/appointments?action=new', icon: Plus, isAction: true },
     ],
     subItems: [
-      { name: 'Appointments List', path: '/appointments?view=list', icon: Calendar, description: 'Daily OPD queue and patient bookings' },
+      { name: 'Appointments List', path: '/appointments', icon: Calendar, description: 'Daily OPD queue, consultations, and patient bookings' },
       { name: 'Appointment Calendar', path: '/appointments?view=calendar', icon: CalendarDays, description: 'Visual monthly and weekly scheduling grid' },
-      { name: 'Doctor Schedule', path: '/doctors?from=appointments', icon: Stethoscope, description: 'Attending doctors, specializations, and timings' },
-      { name: 'Appointment Status', path: '/appointments?filter=status', icon: Clock, description: 'Waiting, in-consultation, and completed slots' },
+      { name: 'Doctor Schedule', path: '/doctors?from=appointments', icon: Stethoscope, description: 'Attending doctors, duty schedules, and consulting hours' },
     ],
   },
   {
@@ -110,18 +94,12 @@ const MAIN_NAV_ITEMS = [
     path: '/prescriptions',
     icon: FileText,
     subPaths: ['/prescriptions'],
-    summary: 'Prescription List, New Prescription, Patient Prescription History, Print Prescription.',
+    summary: 'Clinical prescription records, digital Rx notes, and medication histories.',
     subTabs: [
       { id: 'list', name: 'Prescription List', path: '/prescriptions', icon: FileText },
-      { id: 'new', name: '+ New Prescription', path: '/prescriptions?action=new', icon: FilePlus, isAction: true },
-      { id: 'history', name: 'Patient Prescription History', path: '/prescriptions?tab=history', icon: History },
-      { id: 'print', name: 'Print Prescription', path: '/prescriptions?action=print', icon: Printer },
     ],
     subItems: [
-      { name: 'Prescription List', path: '/prescriptions', icon: FileText, description: 'Browse and filter clinical prescription records' },
-      { name: 'New Prescription', path: '/prescriptions?action=new', icon: FilePlus, description: 'Clinical consultation with instant medicine search' },
-      { name: 'Patient Prescription History', path: '/prescriptions?tab=history', icon: History, description: 'Past clinical notes, medications, and follow-ups' },
-      { name: 'Print Prescription', path: '/prescriptions?action=print', icon: Printer, description: 'Official clinic letterhead PDF prescription' },
+      { name: 'Prescription List', path: '/prescriptions', icon: FileText, description: 'Browse and filter digital prescriptions and clinical notes' },
     ],
   },
   {
@@ -130,7 +108,7 @@ const MAIN_NAV_ITEMS = [
     path: '/bills',
     icon: Receipt,
     subPaths: ['/bills', '/payments', '/expenses'],
-    summary: 'Patient Bills, Payment Collection, Expenses, Income & Expense Summary.',
+    summary: 'Patient billing, fee collections, operational expenses, and financial summaries.',
     subTabs: [
       { id: 'bills', name: 'Patient Bills', path: '/bills', icon: Receipt },
       { id: 'payments', name: 'Payment Collection', path: '/payments', icon: CreditCard },
@@ -138,10 +116,10 @@ const MAIN_NAV_ITEMS = [
       { id: 'summary', name: 'Income & Expense Summary', path: '/bills?tab=summary', icon: Coins },
     ],
     subItems: [
-      { name: 'Patient Bills', path: '/bills', icon: Receipt, description: 'Itemized consultation charges, procedures, and balances' },
-      { name: 'Payment Collection', path: '/payments', icon: CreditCard, description: 'Collect patient dues, receipts, and deposits' },
-      { name: 'Expenses', path: '/expenses', icon: TrendingDown, description: 'Disbursements, operating costs, and expense vouchers' },
-      { name: 'Income & Expense Summary', path: '/bills?tab=summary', icon: Coins, description: 'Financial summary, margins, and revenue tracker' },
+      { name: 'Patient Bills', path: '/bills', icon: Receipt, description: 'Itemized consultation charges, procedures, and dues' },
+      { name: 'Payment Collection', path: '/payments', icon: CreditCard, description: 'Collect patient dues, receipts, and deposit history' },
+      { name: 'Expenses', path: '/expenses', icon: TrendingDown, description: 'Disbursements, clinic operating costs, and vouchers' },
+      { name: 'Income & Expense Summary', path: '/bills?tab=summary', icon: Coins, description: 'Financial income vs expense summary and P&L tracker' },
     ],
   },
   {
@@ -150,18 +128,18 @@ const MAIN_NAV_ITEMS = [
     path: '/accounts',
     icon: Landmark,
     subPaths: ['/accounts', '/chart-of-accounts'],
-    summary: 'Chart of Accounts, Cash Accounts, Bank Accounts, Account Transactions and Ledgers.',
+    summary: 'Chart of accounts, cash drawers, bank accounts, and transaction ledgers.',
     subTabs: [
       { id: 'coa', name: 'Chart of Accounts', path: '/chart-of-accounts', icon: Layers },
       { id: 'cash', name: 'Cash Accounts', path: '/accounts?type=Cash', icon: Landmark },
       { id: 'bank', name: 'Bank Accounts', path: '/accounts?type=Bank', icon: CreditCard },
-      { id: 'ledgers', name: 'Account Transactions and Ledgers', path: '/accounts?tab=ledgers', icon: FileText },
+      { id: 'ledgers', name: 'Account Transactions & Ledgers', path: '/accounts?tab=ledgers', icon: FileText },
     ],
     subItems: [
       { name: 'Chart of Accounts', path: '/chart-of-accounts', icon: Layers, description: 'Financial income and expense classification' },
       { name: 'Cash Accounts', path: '/accounts?type=Cash', icon: Landmark, description: 'Physical cash counters and register balances' },
       { name: 'Bank Accounts', path: '/accounts?type=Bank', icon: CreditCard, description: 'Commercial clinic bank accounts and statements' },
-      { name: 'Account Transactions and Ledgers', path: '/accounts?tab=ledgers', icon: FileText, description: 'Ledger journal entries and audit trails' },
+      { name: 'Account Transactions & Ledgers', path: '/accounts?tab=ledgers', icon: FileText, description: 'Ledger journal entries and audit trails' },
     ],
   },
   {
@@ -170,15 +148,15 @@ const MAIN_NAV_ITEMS = [
     path: '/users',
     icon: ShieldCheck,
     subPaths: ['/users', '/doctors'],
-    summary: 'Doctors, Staff and User Management.',
+    summary: 'Doctor profiles, clinic staff accounts, and role-based permissions.',
     subTabs: [
       { id: 'doctors', name: 'Doctors', path: '/doctors', icon: Stethoscope },
-      { id: 'staff', name: 'Staff and User Management', path: '/users', icon: Users },
+      { id: 'staff', name: 'Staff & User Management', path: '/users', icon: Users },
       { id: 'roles', name: 'Roles & Permissions', path: '/settings?tab=roles', icon: ShieldCheck },
     ],
     subItems: [
       { name: 'Doctors', path: '/doctors', icon: Stethoscope, description: 'Doctor profiles, consultation fees, and schedules' },
-      { name: 'Staff and User Management', path: '/users', icon: Users, description: 'Receptionists, accountants, and staff profiles' },
+      { name: 'Staff & User Management', path: '/users', icon: Users, description: 'Receptionists, accountants, and staff profiles' },
       { name: 'Roles & Permissions', path: '/settings?tab=roles', icon: ShieldCheck, description: 'Role privileges, module access, and credentials' },
     ],
   },
@@ -188,7 +166,7 @@ const MAIN_NAV_ITEMS = [
     path: '/settings',
     icon: Settings,
     subPaths: ['/settings'],
-    summary: 'Clinic Settings, Roles & Permissions, Printing Settings and other system configurations.',
+    summary: 'Clinic profile, permissions, printing layouts, and system configurations.',
     subTabs: [
       { id: 'clinic', name: 'Clinic Settings', path: '/settings?tab=clinic', icon: Building2 },
       { id: 'roles', name: 'Roles & Permissions', path: '/settings?tab=roles', icon: ShieldCheck },
@@ -338,45 +316,23 @@ export const Navbar = () => {
     const params = new URLSearchParams(search);
 
     if (modId === 'dashboard') {
-      const section = params.get('section');
-      if (!section && subTab.id === 'overview') return true;
-      if (section === 'appointments' && subTab.id === 'appointments') return true;
-      if (section === 'waiting' && subTab.id === 'patients') return true;
-      if (section === 'billing' && subTab.id === 'billing') return true;
-      if (section === 'expenses' && subTab.id === 'expenses') return true;
-      return false;
+      return subTab.id === 'overview';
     }
 
     if (modId === 'patients') {
-      const action = params.get('action');
-      const tab = params.get('tab');
-      if (action === 'new' && subTab.id === 'add') return true;
-      if (tab === 'profile' && subTab.id === 'profile') return true;
-      if (tab === 'history' && subTab.id === 'history') return true;
-      if (!action && !tab && subTab.id === 'list') return true;
-      return false;
+      return subTab.id === 'list';
     }
 
     if (modId === 'appointments') {
       const view = params.get('view');
-      const action = params.get('action');
-      const filter = params.get('filter');
-      if (action === 'new' && subTab.id === 'new') return true;
       if (currentPath.startsWith('/doctors') && subTab.id === 'schedule') return true;
       if (view === 'calendar' && subTab.id === 'calendar') return true;
-      if (filter === 'status' && subTab.id === 'status') return true;
-      if ((!view || view === 'list') && !action && !filter && !currentPath.startsWith('/doctors') && subTab.id === 'list') return true;
+      if ((!view || view === 'list') && !currentPath.startsWith('/doctors') && subTab.id === 'list') return true;
       return false;
     }
 
     if (modId === 'prescriptions') {
-      const action = params.get('action');
-      const tab = params.get('tab');
-      if (action === 'new' && subTab.id === 'new') return true;
-      if (action === 'print' && subTab.id === 'print') return true;
-      if (tab === 'history' && subTab.id === 'history') return true;
-      if (!action && !tab && subTab.id === 'list') return true;
-      return false;
+      return subTab.id === 'list';
     }
 
     if (modId === 'finance') {
@@ -1194,15 +1150,8 @@ export const Navbar = () => {
         <div className="w-full bg-white border-t border-b border-slate-200/90 shadow-2xs z-30">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between gap-3 py-1.5 overflow-x-auto no-scrollbar">
-              {/* Left: Active Module Badge & Horizontal Sub-Tabs */}
+              {/* Left: Horizontal Sub-Tabs (No duplicate module name label) */}
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-max">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100/90 border border-slate-200/90 text-slate-700 mr-1 flex-shrink-0">
-                  <activeModule.icon className="w-3.5 h-3.5 text-brand-600" />
-                  <span className="text-[11px] font-bold tracking-tight">
-                    {activeModule.name}:
-                  </span>
-                </div>
-
                 {activeModule.subTabs.map((subTab) => {
                   const isTabActive = checkIsSubTabActive(activeModule.id, subTab);
                   const SubIcon = subTab.icon;
@@ -1212,11 +1161,9 @@ export const Navbar = () => {
                       key={subTab.id}
                       type="button"
                       onClick={() => navigate(subTab.path)}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs transition-all duration-150 cursor-pointer select-none ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all duration-150 cursor-pointer select-none ${
                         isTabActive
                           ? 'bg-brand-600 text-white font-bold shadow-xs'
-                          : subTab.isAction
-                          ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-semibold border border-emerald-200/80 shadow-2xs'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium border border-transparent'
                       }`}
                     >
@@ -1225,8 +1172,6 @@ export const Navbar = () => {
                           className={`w-3.5 h-3.5 flex-shrink-0 ${
                             isTabActive
                               ? 'text-white'
-                              : subTab.isAction
-                              ? 'text-emerald-600'
                               : 'text-slate-400 group-hover:text-slate-600'
                           }`}
                         />
