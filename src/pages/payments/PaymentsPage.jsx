@@ -20,6 +20,7 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { DataTable } from '../../components/common/DataTable';
 import { FilterBar } from '../../components/common/FilterBar';
 import { Modal } from '../../components/common/Modal';
+import { SearchableSelect } from '../../components/common/SearchableSelect';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import { generatePaymentReceiptPDF } from '../../services/documentService';
@@ -297,18 +298,21 @@ export const PaymentsPage = () => {
         }}
         totalResults={filteredPayments.length}
       >
-        <select
-          value={selectedMethod}
-          onChange={(e) => setSelectedMethod(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Payment Methods</option>
-          {PAYMENT_METHODS.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[180px]">
+          <SearchableSelect
+            value={selectedMethod}
+            onChange={(e) => setSelectedMethod(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter payment method..."
+          >
+            <option value="ALL">All Payment Methods</option>
+            {PAYMENT_METHODS.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </SearchableSelect>
+        </div>
       </FilterBar>
 
       {/* Payments Data Table */}
@@ -339,18 +343,19 @@ export const PaymentsPage = () => {
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               Select Patient *
             </label>
-            <select
+            <SearchableSelect
               required
               value={formData.patientId}
               onChange={(e) => handlePatientSelect(e.target.value)}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+              searchPlaceholder="Search patient name, ID, or balance..."
             >
               {patients.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} ({p.id}) — Outstanding: {formatCurrency(p.outstandingBalance)}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </div>
 
           <div>
@@ -362,18 +367,19 @@ export const PaymentsPage = () => {
                 This patient currently has no unpaid bills with an outstanding balance.
               </p>
             ) : (
-              <select
+              <SearchableSelect
                 required
                 value={formData.billId}
                 onChange={(e) => handleBillSelect(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold"
+                searchPlaceholder="Search invoice # or amount..."
               >
                 {availableBills.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.billNumber} — Total: {formatCurrency(b.totalAmount)} | Balance Due: {formatCurrency(b.balanceDue)}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             )}
           </div>
 
@@ -430,35 +436,37 @@ export const PaymentsPage = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Payment Method *
               </label>
-              <select
+              <SearchableSelect
                 value={formData.paymentMethod}
                 onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                searchPlaceholder="Search payment method..."
               >
                 {PAYMENT_METHODS.map((m) => (
                   <option key={m} value={m}>
                     {m}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Deposit to Account *
               </label>
-              <select
+              <SearchableSelect
                 required
                 value={formData.accountId}
                 onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                searchPlaceholder="Search receiving account..."
               >
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name} (Bal: {formatCurrency(a.currentBalance)})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           </div>
 

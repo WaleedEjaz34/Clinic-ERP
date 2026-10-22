@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Users,
   Plus,
@@ -25,6 +25,7 @@ import { DataTable } from '../../components/common/DataTable';
 import { FilterBar } from '../../components/common/FilterBar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
+import { SearchableSelect } from '../../components/common/SearchableSelect';
 import { Tabs } from '../../components/common/Tabs';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate, formatTime } from '../../utils/date';
@@ -44,6 +45,8 @@ export const PatientsPage = () => {
     addToast,
   } = useClinic();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // Search & Filter state
   const [search, setSearch] = useState('');
   const [selectedGender, setSelectedGender] = useState('ALL');
@@ -55,6 +58,42 @@ export const PatientsPage = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [viewingPatient, setViewingPatient] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+
+  // React to Sub-Tab navigation
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const tab = searchParams.get('tab');
+    if (action === 'new') {
+      setEditingPatient(null);
+      setFormData({
+        name: '',
+        phone: '',
+        dob: '1995-01-01',
+        age: 31,
+        gender: 'Male',
+        address: '',
+        emergencyContact: '',
+        registrationDate: new Date().toISOString().split('T')[0],
+        bloodGroup: 'B+',
+        notes: '',
+        status: 'Active',
+        outstandingBalance: 0,
+      });
+      setIsAddEditOpen(true);
+    } else if (tab === 'profile') {
+      if (patients.length > 0) {
+        setViewingPatient(patients[0]);
+        setActiveTab('overview');
+        setIsDetailOpen(true);
+      }
+    } else if (tab === 'history') {
+      if (patients.length > 0) {
+        setViewingPatient(patients[0]);
+        setActiveTab('history');
+        setIsDetailOpen(true);
+      }
+    }
+  }, [searchParams, patients]);
 
   // Notes state for Patient Detail
   const [newNoteText, setNewNoteText] = useState('');
@@ -349,26 +388,32 @@ export const PatientsPage = () => {
         onResetFilters={handleResetFilters}
         totalResults={filteredPatients.length}
       >
-        <select
-          value={selectedGender}
-          onChange={(e) => setSelectedGender(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Genders</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        </select>
+        <div className="min-w-[140px]">
+          <SearchableSelect
+            value={selectedGender}
+            onChange={(e) => setSelectedGender(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter gender..."
+          >
+            <option value="ALL">All Genders</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </SearchableSelect>
+        </div>
 
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
+        <div className="min-w-[140px]">
+          <SearchableSelect
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter status..."
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </SearchableSelect>
+        </div>
       </FilterBar>
 
       {/* Patients Data Table */}
@@ -382,7 +427,10 @@ export const PatientsPage = () => {
       {/* Add / Edit Patient Modal */}
       <Modal
         isOpen={isAddEditOpen}
-        onClose={() => setIsAddEditOpen(false)}
+        onClose={() => {
+          setIsAddEditOpen(false);
+          if (searchParams.get('action')) setSearchParams({});
+        }}
         title={editingPatient ? `Edit Patient — ${editingPatient.name}` : 'Register New Patient'}
         subtitle="Permanent clinic record registration with demographic and emergency data."
         maxWidth="max-w-2xl"
@@ -451,15 +499,16 @@ export const PatientsPage = () => {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Gender</label>
-                <select
+                <SearchableSelect
                   value={formData.gender}
                   onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                  searchPlaceholder="Search gender..."
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
-                </select>
+                </SearchableSelect>
               </div>
             </div>
 
@@ -467,17 +516,18 @@ export const PatientsPage = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Blood Group
               </label>
-              <select
+              <SearchableSelect
                 value={formData.bloodGroup}
                 onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                searchPlaceholder="Search blood group..."
               >
                 {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
                   <option key={bg} value={bg}>
                     {bg}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div>
@@ -541,7 +591,10 @@ export const PatientsPage = () => {
       {/* Patient Detail 8-Tab 360-degree Modal (Section 7) */}
       <Modal
         isOpen={isDetailOpen}
-        onClose={() => setIsDetailOpen(false)}
+        onClose={() => {
+          setIsDetailOpen(false);
+          if (searchParams.get('tab')) setSearchParams({});
+        }}
         title={viewingPatient ? `Patient 360° Profile — ${viewingPatient.name} (${viewingPatient.id})` : 'Patient Profile'}
         maxWidth="max-w-4xl"
       >

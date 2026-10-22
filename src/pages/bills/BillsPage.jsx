@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Receipt,
   Plus,
@@ -16,6 +16,11 @@ import {
   Stethoscope,
   Tag,
   Check,
+  TrendingDown,
+  TrendingUp,
+  Coins,
+  DollarSign,
+  Scale,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -23,17 +28,21 @@ import { DataTable } from '../../components/common/DataTable';
 import { FilterBar } from '../../components/common/FilterBar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
+import { SearchableSelect } from '../../components/common/SearchableSelect';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import { generateBillPDF } from '../../services/documentService';
 
 export const BillsPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     bills,
     patients,
     doctors,
     appointments,
+    payments,
+    expenses,
     addBill,
     updateBill,
     openDocument,
@@ -46,6 +55,15 @@ export const BillsPage = () => {
   // Modals state
   const [isAddEditOpen, setIsAddEditOpen] = useState(false);
   const [editingBill, setEditingBill] = useState(null);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+
+  // React to Sub-Tab navigation
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'summary') {
+      setIsSummaryOpen(true);
+    }
+  }, [searchParams]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -283,16 +301,19 @@ export const BillsPage = () => {
         }}
         totalResults={filteredBills.length}
       >
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Payment Statuses</option>
-          <option value="Unpaid">Unpaid</option>
-          <option value="Partially Paid">Partially Paid</option>
-          <option value="Paid">Paid</option>
-        </select>
+        <div className="min-w-[170px]">
+          <SearchableSelect
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter payment status..."
+          >
+            <option value="ALL">All Payment Statuses</option>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Partially Paid">Partially Paid</option>
+            <option value="Paid">Paid</option>
+          </SearchableSelect>
+        </div>
       </FilterBar>
 
       {/* Bills Data Table */}
@@ -317,25 +338,26 @@ export const BillsPage = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Patient *
               </label>
-              <select
+              <SearchableSelect
                 required
                 value={formData.patientId}
                 onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                searchPlaceholder="Search patient name or ID..."
               >
                 {patients.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} ({p.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Attending Doctor *
               </label>
-              <select
+              <SearchableSelect
                 required
                 value={formData.doctorId}
                 onChange={(e) => {
@@ -347,13 +369,14 @@ export const BillsPage = () => {
                   });
                 }}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                searchPlaceholder="Search doctor or fee..."
               >
                 {doctors.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name} — Rs. {d.consultationFee}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div>
@@ -504,6 +527,104 @@ export const BillsPage = () => {
             </button>
           </div>
         </form>
+      </Modal>
+ 
+      {/* Income & Expense Summary Modal (Finance Sub-Tab) */}
+      <Modal
+        isOpen={isSummaryOpen}
+        onClose={() => {
+          setIsSummaryOpen(false);
+          if (searchParams.get('tab')) setSearchParams({});
+        }}
+        title="Income & Expense Financial Summary"
+        subtitle="Consolidated overview of clinic revenues, collections, operational expenses, and net margins."
+        maxWidth="max-w-3xl"
+      >
+        {(() => {
+          const totalInvoiced = bills.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
+          const totalCollected = (payments || []).reduce((acc, p) => acc + (p.amount || 0), 0);
+          const totalExpenses = (expenses || []).reduce((acc, e) => acc + (e.amount || 0), 0);
+          const totalReceivables = bills.reduce((acc, b) => acc + (b.balanceDue || 0), 0);
+          const netOperatingCashflow = totalCollected - totalExpenses;
+          const consultationRevenue = bills.reduce((acc, b) => acc + (b.consultationFee || 0), 0);
+          const procedureRevenue = bills.reduce((acc, b) => acc + (b.procedureCharges || 0), 0);
+          const testRevenue = bills.reduce((acc, b) => acc + (b.testCharges || 0), 0);
+          const otherRevenue = bills.reduce((acc, b) => acc + (b.otherCharges || 0), 0);
+
+          return (
+            <div className="space-y-5">
+              {/* Top Summary Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-500">Total Invoiced</span>
+                  <p className="text-xl font-bold text-slate-900 mt-0.5">{formatCurrency(totalInvoiced)}</p>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">{bills.length} Invoices</span>
+                </div>
+                <div className="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-100">
+                  <span className="text-[10px] uppercase font-bold text-emerald-700">Total Collected</span>
+                  <p className="text-xl font-bold text-emerald-700 mt-0.5">{formatCurrency(totalCollected)}</p>
+                  <span className="text-[10px] text-emerald-600 block mt-0.5">{(payments || []).length} Payments</span>
+                </div>
+                <div className="p-3.5 bg-rose-50/60 rounded-xl border border-rose-100">
+                  <span className="text-[10px] uppercase font-bold text-rose-700">Total Expenses</span>
+                  <p className="text-xl font-bold text-rose-700 mt-0.5">{formatCurrency(totalExpenses)}</p>
+                  <span className="text-[10px] text-rose-600 block mt-0.5">{(expenses || []).length} Vouchers</span>
+                </div>
+                <div className={`p-3.5 rounded-xl border ${netOperatingCashflow >= 0 ? 'bg-teal-50/60 border-teal-100' : 'bg-amber-50/60 border-amber-100'}`}>
+                  <span className="text-[10px] uppercase font-bold text-slate-700">Net Operating Flow</span>
+                  <p className={`text-xl font-bold mt-0.5 ${netOperatingCashflow >= 0 ? 'text-teal-700' : 'text-amber-700'}`}>
+                    {formatCurrency(netOperatingCashflow)}
+                  </p>
+                  <span className="text-[10px] text-slate-500 block mt-0.5">Cash In minus Out</span>
+                </div>
+              </div>
+
+              {/* Invoiced Revenue Breakdown */}
+              <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Revenue Breakdown by Category
+                </h4>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+                    <span className="text-slate-700 font-medium">Consultation Income</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(consultationRevenue)}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+                    <span className="text-slate-700 font-medium">Procedure & Clinical Charges</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(procedureRevenue)}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+                    <span className="text-slate-700 font-medium">Diagnostic Tests & Labs</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(testRevenue)}</span>
+                  </div>
+                  {otherRevenue > 0 && (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+                      <span className="text-slate-700 font-medium">Other Clinic Services</span>
+                      <span className="font-bold text-slate-900">{formatCurrency(otherRevenue)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-amber-50/60 border border-amber-200/80">
+                    <span className="text-amber-900 font-semibold">Outstanding Patient Receivables</span>
+                    <span className="font-bold text-amber-800">{formatCurrency(totalReceivables)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSummaryOpen(false);
+                    if (searchParams.get('tab')) setSearchParams({});
+                  }}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold"
+                >
+                  Close Summary
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );

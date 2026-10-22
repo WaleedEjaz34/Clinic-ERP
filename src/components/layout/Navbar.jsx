@@ -20,41 +20,184 @@ import {
   Search,
   Plus,
   ChevronDown,
+  ChevronRight,
   Bell,
   Check,
   UserCheck,
   LogOut,
+  Settings,
+  Sliders,
+  Printer,
+  Clock,
+  History,
+  FilePlus,
+  UserPlus,
+  CalendarDays,
+  Coins,
+  Building2,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
+import { SearchableSelect } from '../common/SearchableSelect';
 
-export const NAV_GROUPS = [
+const MAIN_NAV_ITEMS = [
   {
-    title: 'Clinical Operations',
-    shortTitle: 'Clinical',
-    items: [
-      { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-      { name: 'Patients', path: '/patients', icon: Users },
-      { name: 'Appointments', path: '/appointments', icon: Calendar },
-      { name: 'Doctors', path: '/doctors', icon: Stethoscope },
-      { name: 'Prescriptions', path: '/prescriptions', icon: FileText },
+    id: 'dashboard',
+    name: 'Dashboard',
+    path: '/',
+    exact: true,
+    icon: LayoutDashboard,
+    summary: 'Overview of clinic operations, appointments, patients, billing, payments, and other key activities.',
+    subTabs: [
+      { id: 'overview', name: 'Overview', path: '/', icon: LayoutDashboard },
+      { id: 'appointments', name: "Today's Appointments", path: '/?section=appointments', icon: Calendar },
+      { id: 'patients', name: 'Waiting Patients', path: '/?section=waiting', icon: Users },
+      { id: 'billing', name: 'Billing & Collection', path: '/?section=billing', icon: Receipt },
+      { id: 'expenses', name: 'Recent Expenses', path: '/?section=expenses', icon: TrendingDown },
+    ],
+    subItems: [
+      { name: 'Clinic Operations Overview', path: '/', icon: LayoutDashboard, description: 'Real-time KPIs, OPD queues, and financial summary' },
+      { name: 'Appointments Schedule', path: '/appointments', icon: Calendar, description: 'Daily appointment slots and queue status' },
+      { name: 'Patients Directory', path: '/patients', icon: Users, description: 'Active patient list and registered medical charts' },
+      { name: 'Billing & Payments Snapshot', path: '/bills', icon: Receipt, description: 'Recent bills, revenue, and cash collection' },
     ],
   },
   {
-    title: 'Financial & Billing',
-    shortTitle: 'Financial',
-    items: [
-      { name: 'Patient Bills', path: '/bills', icon: Receipt },
-      { name: 'Payments', path: '/payments', icon: CreditCard },
-      { name: 'Expenses', path: '/expenses', icon: TrendingDown },
-      { name: 'Cash & Bank', path: '/accounts', icon: Landmark },
-      { name: 'Chart of Accounts', path: '/chart-of-accounts', icon: Layers },
+    id: 'patients',
+    name: 'Patients',
+    path: '/patients',
+    icon: Users,
+    subPaths: ['/patients'],
+    summary: 'Patient List, Add Patient, Patient Profile, Medical & Visit History.',
+    subTabs: [
+      { id: 'list', name: 'Patient List', path: '/patients', icon: Users },
+      { id: 'add', name: '+ Add Patient', path: '/patients?action=new', icon: UserPlus, isAction: true },
+      { id: 'profile', name: 'Patient Profile', path: '/patients?tab=profile', icon: UserCheck },
+      { id: 'history', name: 'Medical & Visit History', path: '/patients?tab=history', icon: History },
+    ],
+    subItems: [
+      { name: 'Patient List', path: '/patients', icon: Users, description: 'Browse, search, and manage all registered patients' },
+      { name: 'Add Patient', path: '/patients?action=new', icon: UserPlus, description: 'Register new patient with medical history' },
+      { name: 'Patient Profile & 360 View', path: '/patients?tab=profile', icon: UserCheck, description: 'Electronic medical charts, vitals, and documents' },
+      { name: 'Medical & Visit History', path: '/patients?tab=history', icon: History, description: 'Complete chronological history of clinic visits' },
     ],
   },
   {
-    title: 'Administration',
-    shortTitle: 'Admin',
-    items: [
-      { name: 'Users & Roles', path: '/users', icon: ShieldCheck },
+    id: 'appointments',
+    name: 'Appointments',
+    path: '/appointments',
+    icon: Calendar,
+    subPaths: ['/appointments'],
+    summary: 'Appointments, Appointment Calendar, Doctor Schedule, Appointment Status.',
+    subTabs: [
+      { id: 'list', name: 'Appointments List', path: '/appointments?view=list', icon: Calendar },
+      { id: 'calendar', name: 'Appointment Calendar', path: '/appointments?view=calendar', icon: CalendarDays },
+      { id: 'schedule', name: 'Doctor Schedule', path: '/doctors?from=appointments', icon: Stethoscope },
+      { id: 'status', name: 'Appointment Status', path: '/appointments?filter=status', icon: Clock },
+      { id: 'new', name: '+ Book Appointment', path: '/appointments?action=new', icon: Plus, isAction: true },
+    ],
+    subItems: [
+      { name: 'Appointments List', path: '/appointments?view=list', icon: Calendar, description: 'Daily OPD queue and patient bookings' },
+      { name: 'Appointment Calendar', path: '/appointments?view=calendar', icon: CalendarDays, description: 'Visual monthly and weekly scheduling grid' },
+      { name: 'Doctor Schedule', path: '/doctors?from=appointments', icon: Stethoscope, description: 'Attending doctors, specializations, and timings' },
+      { name: 'Appointment Status', path: '/appointments?filter=status', icon: Clock, description: 'Waiting, in-consultation, and completed slots' },
+    ],
+  },
+  {
+    id: 'prescriptions',
+    name: 'Prescriptions',
+    path: '/prescriptions',
+    icon: FileText,
+    subPaths: ['/prescriptions'],
+    summary: 'Prescription List, New Prescription, Patient Prescription History, Print Prescription.',
+    subTabs: [
+      { id: 'list', name: 'Prescription List', path: '/prescriptions', icon: FileText },
+      { id: 'new', name: '+ New Prescription', path: '/prescriptions?action=new', icon: FilePlus, isAction: true },
+      { id: 'history', name: 'Patient Prescription History', path: '/prescriptions?tab=history', icon: History },
+      { id: 'print', name: 'Print Prescription', path: '/prescriptions?action=print', icon: Printer },
+    ],
+    subItems: [
+      { name: 'Prescription List', path: '/prescriptions', icon: FileText, description: 'Browse and filter clinical prescription records' },
+      { name: 'New Prescription', path: '/prescriptions?action=new', icon: FilePlus, description: 'Clinical consultation with instant medicine search' },
+      { name: 'Patient Prescription History', path: '/prescriptions?tab=history', icon: History, description: 'Past clinical notes, medications, and follow-ups' },
+      { name: 'Print Prescription', path: '/prescriptions?action=print', icon: Printer, description: 'Official clinic letterhead PDF prescription' },
+    ],
+  },
+  {
+    id: 'finance',
+    name: 'Finance',
+    path: '/bills',
+    icon: Receipt,
+    subPaths: ['/bills', '/payments', '/expenses'],
+    summary: 'Patient Bills, Payment Collection, Expenses, Income & Expense Summary.',
+    subTabs: [
+      { id: 'bills', name: 'Patient Bills', path: '/bills', icon: Receipt },
+      { id: 'payments', name: 'Payment Collection', path: '/payments', icon: CreditCard },
+      { id: 'expenses', name: 'Expenses', path: '/expenses', icon: TrendingDown },
+      { id: 'summary', name: 'Income & Expense Summary', path: '/bills?tab=summary', icon: Coins },
+    ],
+    subItems: [
+      { name: 'Patient Bills', path: '/bills', icon: Receipt, description: 'Itemized consultation charges, procedures, and balances' },
+      { name: 'Payment Collection', path: '/payments', icon: CreditCard, description: 'Collect patient dues, receipts, and deposits' },
+      { name: 'Expenses', path: '/expenses', icon: TrendingDown, description: 'Disbursements, operating costs, and expense vouchers' },
+      { name: 'Income & Expense Summary', path: '/bills?tab=summary', icon: Coins, description: 'Financial summary, margins, and revenue tracker' },
+    ],
+  },
+  {
+    id: 'accounts',
+    name: 'Accounts',
+    path: '/accounts',
+    icon: Landmark,
+    subPaths: ['/accounts', '/chart-of-accounts'],
+    summary: 'Chart of Accounts, Cash Accounts, Bank Accounts, Account Transactions and Ledgers.',
+    subTabs: [
+      { id: 'coa', name: 'Chart of Accounts', path: '/chart-of-accounts', icon: Layers },
+      { id: 'cash', name: 'Cash Accounts', path: '/accounts?type=Cash', icon: Landmark },
+      { id: 'bank', name: 'Bank Accounts', path: '/accounts?type=Bank', icon: CreditCard },
+      { id: 'ledgers', name: 'Account Transactions and Ledgers', path: '/accounts?tab=ledgers', icon: FileText },
+    ],
+    subItems: [
+      { name: 'Chart of Accounts', path: '/chart-of-accounts', icon: Layers, description: 'Financial income and expense classification' },
+      { name: 'Cash Accounts', path: '/accounts?type=Cash', icon: Landmark, description: 'Physical cash counters and register balances' },
+      { name: 'Bank Accounts', path: '/accounts?type=Bank', icon: CreditCard, description: 'Commercial clinic bank accounts and statements' },
+      { name: 'Account Transactions and Ledgers', path: '/accounts?tab=ledgers', icon: FileText, description: 'Ledger journal entries and audit trails' },
+    ],
+  },
+  {
+    id: 'users',
+    name: 'Users',
+    path: '/users',
+    icon: ShieldCheck,
+    subPaths: ['/users', '/doctors'],
+    summary: 'Doctors, Staff and User Management.',
+    subTabs: [
+      { id: 'doctors', name: 'Doctors', path: '/doctors', icon: Stethoscope },
+      { id: 'staff', name: 'Staff and User Management', path: '/users', icon: Users },
+      { id: 'roles', name: 'Roles & Permissions', path: '/settings?tab=roles', icon: ShieldCheck },
+    ],
+    subItems: [
+      { name: 'Doctors', path: '/doctors', icon: Stethoscope, description: 'Doctor profiles, consultation fees, and schedules' },
+      { name: 'Staff and User Management', path: '/users', icon: Users, description: 'Receptionists, accountants, and staff profiles' },
+      { name: 'Roles & Permissions', path: '/settings?tab=roles', icon: ShieldCheck, description: 'Role privileges, module access, and credentials' },
+    ],
+  },
+  {
+    id: 'settings',
+    name: 'Settings',
+    path: '/settings',
+    icon: Settings,
+    subPaths: ['/settings'],
+    summary: 'Clinic Settings, Roles & Permissions, Printing Settings and other system configurations.',
+    subTabs: [
+      { id: 'clinic', name: 'Clinic Settings', path: '/settings?tab=clinic', icon: Building2 },
+      { id: 'roles', name: 'Roles & Permissions', path: '/settings?tab=roles', icon: ShieldCheck },
+      { id: 'printing', name: 'Printing Settings', path: '/settings?tab=printing', icon: Printer },
+      { id: 'system', name: 'System Configurations', path: '/settings?tab=system', icon: Sliders },
+    ],
+    subItems: [
+      { name: 'Clinic Settings', path: '/settings?tab=clinic', icon: Building2, description: 'Clinic legal name, address, phone, and OPD hours' },
+      { name: 'Roles & Permissions', path: '/settings?tab=roles', icon: ShieldCheck, description: 'System role matrix and simulation controls' },
+      { name: 'Printing Settings', path: '/settings?tab=printing', icon: Printer, description: 'A4, thermal formats, logo headers, and Rx footers' },
+      { name: 'System Configurations', path: '/settings?tab=system', icon: Sliders, description: 'Date formats, timezones, and database backup/reset' },
     ],
   },
 ];
@@ -88,6 +231,156 @@ export const Navbar = () => {
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [activeDropdownId, setActiveDropdownId] = useState(null);
+  const [expandedMobileSections, setExpandedMobileSections] = useState({});
+  const dropdownTimeoutRef = useRef(null);
+
+  const handleNavMouseEnter = (id) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
+    setActiveDropdownId(id);
+  };
+
+  const handleNavMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setActiveDropdownId(null);
+    }, 180);
+  };
+
+  const toggleMobileSection = (id) => {
+    setExpandedMobileSections((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const isNavActive = (item) => {
+    if (item.exact) {
+      return location.pathname === item.path;
+    }
+    if (location.pathname === item.path) return true;
+    if (item.subPaths && item.subPaths.some((p) => location.pathname.startsWith(p))) return true;
+    if (location.pathname.startsWith(item.path) && item.path !== '/') return true;
+    return false;
+  };
+
+  const getActiveModule = () => {
+    const p = location.pathname;
+    const search = location.search;
+    const params = new URLSearchParams(search);
+
+    if (p === '/') return MAIN_NAV_ITEMS.find((m) => m.id === 'dashboard');
+    if (p.startsWith('/patients')) return MAIN_NAV_ITEMS.find((m) => m.id === 'patients');
+    if (p.startsWith('/appointments')) return MAIN_NAV_ITEMS.find((m) => m.id === 'appointments');
+    if (p.startsWith('/prescriptions')) return MAIN_NAV_ITEMS.find((m) => m.id === 'prescriptions');
+    if (p.startsWith('/bills') || p.startsWith('/payments') || p.startsWith('/expenses')) {
+      return MAIN_NAV_ITEMS.find((m) => m.id === 'finance');
+    }
+    if (p.startsWith('/accounts') || p.startsWith('/chart-of-accounts')) {
+      return MAIN_NAV_ITEMS.find((m) => m.id === 'accounts');
+    }
+    if (p.startsWith('/doctors')) {
+      if (params.get('from') === 'appointments') {
+        return MAIN_NAV_ITEMS.find((m) => m.id === 'appointments');
+      }
+      return MAIN_NAV_ITEMS.find((m) => m.id === 'users');
+    }
+    if (p.startsWith('/users')) return MAIN_NAV_ITEMS.find((m) => m.id === 'users');
+    if (p.startsWith('/settings')) return MAIN_NAV_ITEMS.find((m) => m.id === 'settings');
+    return MAIN_NAV_ITEMS[0];
+  };
+
+  const activeModule = getActiveModule();
+
+  const checkIsSubTabActive = (modId, subTab) => {
+    const currentPath = location.pathname;
+    const search = location.search;
+    const params = new URLSearchParams(search);
+
+    if (modId === 'dashboard') {
+      const section = params.get('section');
+      if (!section && subTab.id === 'overview') return true;
+      if (section === 'appointments' && subTab.id === 'appointments') return true;
+      if (section === 'waiting' && subTab.id === 'patients') return true;
+      if (section === 'billing' && subTab.id === 'billing') return true;
+      if (section === 'expenses' && subTab.id === 'expenses') return true;
+      return false;
+    }
+
+    if (modId === 'patients') {
+      const action = params.get('action');
+      const tab = params.get('tab');
+      if (action === 'new' && subTab.id === 'add') return true;
+      if (tab === 'profile' && subTab.id === 'profile') return true;
+      if (tab === 'history' && subTab.id === 'history') return true;
+      if (!action && !tab && subTab.id === 'list') return true;
+      return false;
+    }
+
+    if (modId === 'appointments') {
+      const view = params.get('view');
+      const action = params.get('action');
+      const filter = params.get('filter');
+      if (action === 'new' && subTab.id === 'new') return true;
+      if (currentPath.startsWith('/doctors') && subTab.id === 'schedule') return true;
+      if (view === 'calendar' && subTab.id === 'calendar') return true;
+      if (filter === 'status' && subTab.id === 'status') return true;
+      if ((!view || view === 'list') && !action && !filter && !currentPath.startsWith('/doctors') && subTab.id === 'list') return true;
+      return false;
+    }
+
+    if (modId === 'prescriptions') {
+      const action = params.get('action');
+      const tab = params.get('tab');
+      if (action === 'new' && subTab.id === 'new') return true;
+      if (action === 'print' && subTab.id === 'print') return true;
+      if (tab === 'history' && subTab.id === 'history') return true;
+      if (!action && !tab && subTab.id === 'list') return true;
+      return false;
+    }
+
+    if (modId === 'finance') {
+      if (currentPath.startsWith('/bills')) {
+        if (params.get('tab') === 'summary' && subTab.id === 'summary') return true;
+        if (!params.get('tab') && subTab.id === 'bills') return true;
+      }
+      if (currentPath.startsWith('/payments') && subTab.id === 'payments') return true;
+      if (currentPath.startsWith('/expenses') && subTab.id === 'expenses') return true;
+      return false;
+    }
+
+    if (modId === 'accounts') {
+      if (currentPath.startsWith('/chart-of-accounts') && subTab.id === 'coa') return true;
+      if (currentPath.startsWith('/accounts')) {
+        if (params.get('type') === 'Cash' && subTab.id === 'cash') return true;
+        if (params.get('type') === 'Bank' && subTab.id === 'bank') return true;
+        if (params.get('tab') === 'ledgers' && subTab.id === 'ledgers') return true;
+        if (!params.get('type') && !params.get('tab') && subTab.id === 'cash') return true;
+      }
+      return false;
+    }
+
+    if (modId === 'users') {
+      if (currentPath.startsWith('/doctors') && subTab.id === 'doctors') return true;
+      if (currentPath.startsWith('/users') && subTab.id === 'staff') return true;
+      if (currentPath.startsWith('/settings') && params.get('tab') === 'roles' && subTab.id === 'roles') return true;
+      return false;
+    }
+
+    if (modId === 'settings') {
+      const currentTab = params.get('tab') || 'clinic';
+      return subTab.id === currentTab;
+    }
+
+    return false;
+  };
+
+  useEffect(() => {
+    setActiveDropdownId(null);
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   // Search Results filtering
   const searchResults = React.useMemo(() => {
@@ -441,58 +734,6 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* Role Switcher Pill (Interactive Simulator - hidden on mobile, available in drawer) */}
-          <div className="relative hidden sm:block">
-            <button
-              onClick={() => {
-                setShowRoleMenu(!showRoleMenu);
-                setShowQuickMenu(false);
-                setShowNotifMenu(false);
-                setShowProfileMenu(false);
-              }}
-              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs font-medium border border-slate-200 transition-colors"
-              title="Switch Simulated Role"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-brand-600" />
-              <span className="hidden lg:inline text-slate-500">Role:</span>
-              <strong className="text-slate-900">{currentUser.role}</strong>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
-            </button>
-
-            {showRoleMenu && (
-              <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl border border-slate-200 shadow-modal py-1.5 z-50 text-xs animate-in fade-in zoom-in-95">
-                <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                  Switch Active Role:
-                </div>
-                {roles.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => {
-                      switchRole(r);
-                      setShowRoleMenu(false);
-                    }}
-                    className="w-full px-3.5 py-2 text-left hover:bg-slate-50 flex items-center justify-between text-slate-700"
-                  >
-                    <span className={currentUser.role === r ? 'font-bold text-brand-700' : ''}>
-                      {r}
-                    </span>
-                    {currentUser.role === r && <Check className="w-3.5 h-3.5 text-brand-600" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Reset Demo Records Button */}
-          <button
-            onClick={handleResetData}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-xl text-xs font-medium transition-colors"
-            title="Reset local changes and restore demo records"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden xl:inline">Reset Demo</span>
-          </button>
-
           {/* Notification Bell */}
           <div className="relative">
             <button
@@ -583,13 +824,23 @@ export const Navbar = () => {
                 </div>
                 <button
                   onClick={() => {
-                    navigate('/users');
+                    navigate('/settings');
                     setShowProfileMenu(false);
                   }}
                   className="w-full px-3.5 py-2 text-left hover:bg-slate-50 text-slate-700 flex items-center gap-2"
                 >
-                  <UserCheck className="w-4 h-4 text-slate-500" />
-                  <span>User & Permission Settings</span>
+                  <Settings className="w-4 h-4 text-slate-500" />
+                  <span>Clinic & System Settings</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigate('/settings?tab=roles');
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full px-3.5 py-2 text-left hover:bg-slate-50 text-slate-700 flex items-center gap-2"
+                >
+                  <ShieldCheck className="w-4 h-4 text-slate-500" />
+                  <span>Roles & Permissions</span>
                 </button>
                 <button
                   onClick={() => {
@@ -683,48 +934,177 @@ export const Navbar = () => {
         </div>
       )}
 
-      {/* ================= SECONDARY DESKTOP/TABLET NAVBAR (NAV TABS) ================= */}
-      <nav className="hidden md:block border-t border-slate-200/80 bg-slate-50/80 backdrop-blur-xs">
+      {/* ================= REVISED HORIZONTAL MAIN MENU (8 ITEMS) ================= */}
+      {/* Horizontal Main Menu: Dashboard | Patients | Appointments | Prescriptions | Finance | Accounts | Users | Settings */}
+      <nav className="hidden md:block border-t border-slate-200/90 bg-slate-50/90 backdrop-blur-xs shadow-2xs relative z-40">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 py-1.5 overflow-x-auto no-scrollbar">
-            {NAV_GROUPS.map((group, groupIdx) => (
-              <React.Fragment key={group.title}>
-                {groupIdx > 0 && (
-                  <div className="h-5 w-px bg-slate-200 mx-2 flex-shrink-0" />
-                )}
+            {MAIN_NAV_ITEMS.map((item) => {
+              const isActive = isNavActive(item);
+              const isDropdownOpen = activeDropdownId === item.id;
+              const Icon = item.icon;
 
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {group.items.map((item) => (
-                    <NavLink
-                      key={item.path}
-                      to={item.path}
-                      end={item.path === '/'}
-                      className={({ isActive }) =>
-                        `flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 ${
-                          isActive
-                            ? 'bg-white text-brand-700 font-bold shadow-xs border border-brand-200/90 ring-1 ring-brand-500/20'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-                        }`
-                      }
+              return (
+                <div
+                  key={item.id}
+                  className="relative flex items-center"
+                  onMouseEnter={() => handleNavMouseEnter(item.id)}
+                  onMouseLeave={handleNavMouseLeave}
+                >
+                  <div
+                    className={`flex items-center rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-white text-brand-700 font-bold shadow-xs border border-brand-200/90 ring-1 ring-brand-500/20'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/80 border border-transparent'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigate(item.path);
+                        setActiveDropdownId(null);
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold whitespace-nowrap cursor-pointer select-none"
                     >
-                      {({ isActive }) => (
-                        <>
-                          <item.icon
-                            className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${
-                              isActive ? 'text-brand-600' : 'text-slate-500'
-                            }`}
-                          />
-                          <span>{item.name}</span>
-                        </>
-                      )}
-                    </NavLink>
-                  ))}
+                      <Icon
+                        className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${
+                          isActive ? 'text-brand-600' : 'text-slate-500'
+                        }`}
+                      />
+                      <span>{item.name}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDropdownId(activeDropdownId === item.id ? null : item.id);
+                      }}
+                      className={`pr-2 py-1.5 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer ${
+                        isDropdownOpen ? 'rotate-180 text-brand-600' : ''
+                      }`}
+                      title={`View ${item.name} options`}
+                    >
+                      <ChevronDown className="w-3 h-3 transition-transform duration-150" />
+                    </button>
+                  </div>
+
+                  {/* Dropdown Flyout Card */}
+                  {isDropdownOpen && (
+                    <div
+                      className="absolute left-0 top-full mt-1.5 w-80 sm:w-96 bg-white rounded-2xl border border-slate-200 shadow-xl p-3 z-50 text-xs animate-in fade-in zoom-in-95 duration-150"
+                      onMouseEnter={() => handleNavMouseEnter(item.id)}
+                      onMouseLeave={handleNavMouseLeave}
+                    >
+                      {/* Summary Banner */}
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 mb-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="p-1 rounded-lg bg-brand-50 text-brand-700 border border-brand-200/60">
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="font-bold text-slate-900 text-xs">{item.name}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                          {item.summary}
+                        </p>
+                      </div>
+
+                      {/* Sub-items */}
+                      <div className="space-y-1">
+                        {item.subItems.map((sub, sIdx) => {
+                          const SubIcon = sub.icon || Icon;
+                          return (
+                            <button
+                              key={sIdx}
+                              type="button"
+                              onClick={() => {
+                                navigate(sub.path);
+                                setActiveDropdownId(null);
+                              }}
+                              className="w-full text-left p-2 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/70 transition-all flex items-start gap-2.5 group cursor-pointer"
+                            >
+                              <div className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-brand-50 group-hover:text-brand-700 text-slate-500 transition-colors mt-0.5 flex-shrink-0">
+                                <SubIcon className="w-3.5 h-3.5" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <span className="font-semibold text-slate-800 group-hover:text-brand-700 transition-colors block text-xs">
+                                  {sub.name}
+                                </span>
+                                <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
+                                  {sub.description}
+                                </span>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-brand-500 transition-colors mt-1 flex-shrink-0" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </React.Fragment>
-            ))}
+              );
+            })}
           </div>
         </div>
       </nav>
+
+      {/* ================= TIER 2: PERSISTENT SUB-TAB BAR ================= */}
+      {/* Dedicated visible Sub-Tabs Bar for active module */}
+      {activeModule && activeModule.subTabs && (
+        <div className="w-full bg-white border-t border-b border-slate-200/90 shadow-2xs z-30">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between gap-3 py-1.5 overflow-x-auto no-scrollbar">
+              {/* Left: Active Module Badge & Horizontal Sub-Tabs */}
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-max">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100/90 border border-slate-200/90 text-slate-700 mr-1 flex-shrink-0">
+                  <activeModule.icon className="w-3.5 h-3.5 text-brand-600" />
+                  <span className="text-[11px] font-bold tracking-tight">
+                    {activeModule.name}:
+                  </span>
+                </div>
+
+                {activeModule.subTabs.map((subTab) => {
+                  const isTabActive = checkIsSubTabActive(activeModule.id, subTab);
+                  const SubIcon = subTab.icon;
+
+                  return (
+                    <button
+                      key={subTab.id}
+                      type="button"
+                      onClick={() => navigate(subTab.path)}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs transition-all duration-150 cursor-pointer select-none ${
+                        isTabActive
+                          ? 'bg-brand-600 text-white font-bold shadow-xs'
+                          : subTab.isAction
+                          ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-semibold border border-emerald-200/80 shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium border border-transparent'
+                      }`}
+                    >
+                      {SubIcon && (
+                        <SubIcon
+                          className={`w-3.5 h-3.5 flex-shrink-0 ${
+                            isTabActive
+                              ? 'text-white'
+                              : subTab.isAction
+                              ? 'text-emerald-600'
+                              : 'text-slate-400 group-hover:text-slate-600'
+                          }`}
+                        />
+                      )}
+                      <span>{subTab.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right: Module Description / Scope */}
+              <div className="hidden lg:flex items-center text-[11px] text-slate-400 whitespace-nowrap pl-4 border-l border-slate-200">
+                <span className="truncate max-w-sm">{activeModule.summary}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ================= MOBILE NAVIGATION DRAWER ================= */}
       {mobileOpen && typeof document !== 'undefined' && createPortal(
@@ -811,33 +1191,93 @@ export const Navbar = () => {
               </div>
             </div>
 
-            {/* Navigation Groups */}
-            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
-              {NAV_GROUPS.map((group, gIdx) => (
-                <div key={gIdx} className="space-y-1">
-                  <h4 className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                    {group.title}
-                  </h4>
-                  {group.items.map((item) => (
-                    <NavLink
-                      key={item.path}
-                      to={item.path}
-                      end={item.path === '/'}
-                      onClick={() => setMobileOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
-                          isActive
-                            ? 'bg-brand-50 text-brand-700 font-bold shadow-xs border border-brand-100'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                        }`
-                      }
-                    >
-                      <item.icon className="w-4 h-4 flex-shrink-0" />
-                      <span>{item.name}</span>
-                    </NavLink>
-                  ))}
-                </div>
-              ))}
+            {/* Revised 8-Section Navigation in Mobile Drawer */}
+            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+              <span className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                Main Menu Modules
+              </span>
+              {MAIN_NAV_ITEMS.map((item) => {
+                const isActive = isNavActive(item);
+                const Icon = item.icon;
+                const isExpanded = expandedMobileSections[item.id];
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`rounded-xl border transition-all ${
+                      isActive
+                        ? 'bg-brand-50/50 border-brand-200'
+                        : 'bg-white border-slate-200/80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between p-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigate(item.path);
+                          setMobileOpen(false);
+                        }}
+                        className="flex items-center gap-2.5 text-left flex-1 min-w-0"
+                      >
+                        <div
+                          className={`p-1.5 rounded-lg ${
+                            isActive ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 flex-shrink-0" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span
+                            className={`text-xs block leading-tight ${
+                              isActive ? 'font-bold text-brand-900' : 'font-semibold text-slate-800'
+                            }`}
+                          >
+                            {item.name}
+                          </span>
+                          <span className="text-[10px] text-slate-400 truncate block">
+                            {item.summary.split('.')[0]}
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => toggleMobileSection(item.id)}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
+                      >
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform duration-150 ${
+                            isExpanded ? 'rotate-180 text-brand-600' : ''
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Sub-items accordion */}
+                    {isExpanded && (
+                      <div className="px-2.5 pb-2.5 pt-1 space-y-1 border-t border-slate-100 bg-slate-50/50">
+                        {item.subItems.map((sub, sIdx) => {
+                          const SubIcon = sub.icon || Icon;
+                          return (
+                            <button
+                              key={sIdx}
+                              type="button"
+                              onClick={() => {
+                                navigate(sub.path);
+                                setMobileOpen(false);
+                              }}
+                              className="w-full text-left p-1.5 rounded-lg hover:bg-white text-xs font-medium text-slate-700 flex items-center gap-2 transition-colors"
+                            >
+                              <SubIcon className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="truncate">{sub.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Drawer Footer with Role Switcher & User Profile */}
@@ -859,19 +1299,22 @@ export const Navbar = () => {
               </div>
 
               {/* Mobile Role Switch Selector */}
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[11px] font-medium text-slate-500">Switch Role:</span>
-                <select
-                  value={currentUser.role}
-                  onChange={(e) => switchRole(e.target.value)}
-                  className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                >
-                  {roles.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex items-center justify-between px-1 gap-2">
+                <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Switch Role:</span>
+                <div className="w-40">
+                  <SearchableSelect
+                    value={currentUser.role}
+                    onChange={(e) => switchRole(e.target.value)}
+                    className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 font-semibold text-slate-700"
+                    searchPlaceholder="Search role..."
+                  >
+                    {roles.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </SearchableSelect>
+                </div>
               </div>
 
               <button

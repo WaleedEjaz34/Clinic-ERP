@@ -22,6 +22,7 @@ import { DataTable } from '../../components/common/DataTable';
 import { FilterBar } from '../../components/common/FilterBar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
+import { SearchableSelect } from '../../components/common/SearchableSelect';
 import { ConfirmationDialog } from '../../components/common/ConfirmationDialog';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
@@ -282,31 +283,37 @@ export const ExpensesPage = () => {
         }}
         totalResults={filteredExpenses.length}
       >
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Expense Categories</option>
-          {activeExpenseCategories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[190px]">
+          <SearchableSelect
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter expense category..."
+          >
+            <option value="ALL">All Expense Categories</option>
+            {activeExpenseCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </SearchableSelect>
+        </div>
 
-        <select
-          value={selectedAccount}
-          onChange={(e) => setSelectedAccount(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Payment Accounts</option>
-          {accounts.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[180px]">
+          <SearchableSelect
+            value={selectedAccount}
+            onChange={(e) => setSelectedAccount(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter payment account..."
+          >
+            <option value="ALL">All Payment Accounts</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </SearchableSelect>
+        </div>
       </FilterBar>
 
       {/* Expenses Data Table */}
@@ -338,18 +345,19 @@ export const ExpensesPage = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Expense Category *
               </label>
-              <select
+              <SearchableSelect
                 required
                 value={formData.categoryId}
                 onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                searchPlaceholder="Search category or code..."
               >
                 {activeExpenseCategories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} ({c.code})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div>
@@ -370,18 +378,19 @@ export const ExpensesPage = () => {
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               Paid From Account *
             </label>
-            <select
+            <SearchableSelect
               required
               value={formData.accountId}
               onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold"
+              searchPlaceholder="Search disbursement account..."
             >
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name} — Available: {formatCurrency(a.currentBalance)}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
             {selectedAccountObj && (
               <p className="text-[11px] text-slate-500 mt-1">
                 Current Available Balance: <strong className="text-slate-800">{formatCurrency(selectedAccountObj.currentBalance)}</strong>

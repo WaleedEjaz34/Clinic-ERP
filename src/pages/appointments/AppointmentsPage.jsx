@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Calendar as CalendarIcon,
   List,
@@ -43,6 +43,7 @@ import { DataTable } from '../../components/common/DataTable';
 import { FilterBar } from '../../components/common/FilterBar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
+import { SearchableSelect } from '../../components/common/SearchableSelect';
 import { formatDate, formatTime } from '../../utils/date';
 
 const VISIT_TYPES = ['New', 'Follow-up', 'Routine', 'Emergency'];
@@ -59,6 +60,8 @@ export const AppointmentsPage = () => {
     updateAppointmentStatus,
     checkAppointmentConflict,
   } = useClinic();
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Mode: 'list' | 'calendar'
   const [viewMode, setViewMode] = useState('list');
@@ -137,6 +140,27 @@ export const AppointmentsPage = () => {
     });
     setIsBookModalOpen(true);
   };
+
+  // React to Sub-Tab navigation
+  useEffect(() => {
+    const view = searchParams.get('view');
+    const action = searchParams.get('action');
+    const filter = searchParams.get('filter');
+
+    if (view === 'calendar') {
+      setViewMode('calendar');
+    } else if (view === 'list') {
+      setViewMode('list');
+    }
+
+    if (action === 'new') {
+      handleOpenBook();
+    }
+
+    if (filter === 'status') {
+      setSelectedStatus('Waiting');
+    }
+  }, [searchParams]);
 
   const handleOpenEdit = (apt) => {
     setEditingApt(apt);
@@ -389,44 +413,53 @@ export const AppointmentsPage = () => {
         onResetFilters={handleResetFilters}
         totalResults={filteredAppointments.length}
       >
-        <select
-          value={selectedDoctor}
-          onChange={(e) => setSelectedDoctor(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Doctors</option>
-          {doctors.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[170px]">
+          <SearchableSelect
+            value={selectedDoctor}
+            onChange={(e) => setSelectedDoctor(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter by doctor..."
+          >
+            <option value="ALL">All Doctors</option>
+            {doctors.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </SearchableSelect>
+        </div>
 
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Statuses</option>
-          {STATUSES.map((st) => (
-            <option key={st} value={st}>
-              {st}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[150px]">
+          <SearchableSelect
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter by status..."
+          >
+            <option value="ALL">All Statuses</option>
+            {STATUSES.map((st) => (
+              <option key={st} value={st}>
+                {st}
+              </option>
+            ))}
+          </SearchableSelect>
+        </div>
 
-        <select
-          value={selectedVisitType}
-          onChange={(e) => setSelectedVisitType(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Visit Types</option>
-          {VISIT_TYPES.map((vt) => (
-            <option key={vt} value={vt}>
-              {vt}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[150px]">
+          <SearchableSelect
+            value={selectedVisitType}
+            onChange={(e) => setSelectedVisitType(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter visit type..."
+          >
+            <option value="ALL">All Visit Types</option>
+            {VISIT_TYPES.map((vt) => (
+              <option key={vt} value={vt}>
+                {vt}
+              </option>
+            ))}
+          </SearchableSelect>
+        </div>
       </FilterBar>
 
       {/* View Switch: List View vs Calendar View */}
@@ -680,7 +713,10 @@ export const AppointmentsPage = () => {
       {/* Book / Edit Appointment Modal (Section 8) */}
       <Modal
         isOpen={isBookModalOpen}
-        onClose={() => setIsBookModalOpen(false)}
+        onClose={() => {
+          setIsBookModalOpen(false);
+          if (searchParams.get('action')) setSearchParams({});
+        }}
         title={editingApt ? `Edit Appointment — ${editingApt.id}` : 'Book Patient Appointment'}
         subtitle="Schedule an OPD clinical visit with real-time doctor availability check."
         maxWidth="max-w-lg"
@@ -699,36 +735,38 @@ export const AppointmentsPage = () => {
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               Select Patient *
             </label>
-            <select
+            <SearchableSelect
               required
               value={formData.patientId}
               onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+              searchPlaceholder="Search patient name, ID, or phone..."
             >
               {patients.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} ({p.id}) — {p.phone}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               Select Attending Doctor *
             </label>
-            <select
+            <SearchableSelect
               required
               value={formData.doctorId}
               onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+              searchPlaceholder="Search doctor or specialization..."
             >
               {doctors.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name} — {d.specialization} (Rs. {d.consultationFee})
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -763,33 +801,35 @@ export const AppointmentsPage = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Visit Type
               </label>
-              <select
+              <SearchableSelect
                 value={formData.visitType}
                 onChange={(e) => setFormData({ ...formData, visitType: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                searchPlaceholder="Search visit type..."
               >
                 {VISIT_TYPES.map((vt) => (
                   <option key={vt} value={vt}>
                     {vt}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Status
               </label>
-              <select
+              <SearchableSelect
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                searchPlaceholder="Search status..."
               >
                 {STATUSES.map((st) => (
                   <option key={st} value={st}>
                     {st}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           </div>
 

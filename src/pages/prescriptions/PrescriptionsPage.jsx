@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FileText,
   Plus,
@@ -23,8 +23,10 @@ import { DataTable } from '../../components/common/DataTable';
 import { FilterBar } from '../../components/common/FilterBar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
+import { SearchableSelect } from '../../components/common/SearchableSelect';
 import { formatDate } from '../../utils/date';
 import { generatePrescriptionPDF } from '../../services/documentService';
+import { commonMedicines } from '../../data/mockMedicines';
 
 export const PrescriptionsPage = () => {
   const location = useLocation();
@@ -38,6 +40,8 @@ export const PrescriptionsPage = () => {
     updatePrescription,
     openDocument,
   } = useClinic();
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Search & Filter state
   const [search, setSearch] = useState('');
@@ -152,6 +156,26 @@ export const PrescriptionsPage = () => {
     });
     setIsEditorOpen(true);
   };
+
+  // React to Sub-Tab navigation
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const tab = searchParams.get('tab');
+
+    if (action === 'new') {
+      handleOpenNew();
+    } else if (action === 'print') {
+      if (prescriptions.length > 0) {
+        const rx = prescriptions[0];
+        const p = patients.find((pat) => pat.id === rx.patientId);
+        const d = doctors.find((doc) => doc.id === rx.doctorId);
+        openDocument(generatePrescriptionPDF(rx, p, d));
+      }
+    } else if (tab === 'history') {
+      setSearch('');
+      setSelectedDoctor('ALL');
+    }
+  }, [searchParams, prescriptions, patients, doctors]);
 
   const handleOpenEdit = (rx) => {
     setEditingRx(rx);
@@ -369,18 +393,21 @@ export const PrescriptionsPage = () => {
         }}
         totalResults={filteredPrescriptions.length}
       >
-        <select
-          value={selectedDoctor}
-          onChange={(e) => setSelectedDoctor(e.target.value)}
-          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-        >
-          <option value="ALL">All Attending Doctors</option>
-          {doctors.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[190px]">
+          <SearchableSelect
+            value={selectedDoctor}
+            onChange={(e) => setSelectedDoctor(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+            searchPlaceholder="Filter by attending doctor..."
+          >
+            <option value="ALL">All Attending Doctors</option>
+            {doctors.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </SearchableSelect>
+        </div>
       </FilterBar>
 
 
@@ -395,7 +422,10 @@ export const PrescriptionsPage = () => {
       {/* Consultation & Prescription Editor Modal (Section 9) */}
       <Modal
         isOpen={isEditorOpen}
-        onClose={() => setIsEditorOpen(false)}
+        onClose={() => {
+          setIsEditorOpen(false);
+          if (searchParams.get('action')) setSearchParams({});
+        }}
         title={editingRx ? `Edit Prescription — ${editingRx.id}` : 'Doctor Clinical Consultation & Prescription'}
         subtitle="Electronic medical record editor with medications, dosages, investigations, and follow-up plan."
         maxWidth="max-w-4xl"
@@ -413,48 +443,59 @@ export const PrescriptionsPage = () => {
               <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                 Patient *
               </label>
-              <select
+              <SearchableSelect
                 required
                 value={formData.patientId}
                 onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
                 className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white"
+                searchPlaceholder="Search patient name or ID..."
               >
                 {patients.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} ({p.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                 Attending Doctor *
               </label>
-              <select
+              <SearchableSelect
                 required
                 value={formData.doctorId}
                 onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
                 className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white"
+                searchPlaceholder="Search doctor or specialty..."
               >
                 {doctors.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name} ({d.specialization})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                 Appointment Reference
               </label>
-              <input
-                type="text"
+              <SearchableSelect
+                allowCustom={true}
                 value={formData.appointmentId}
                 onChange={(e) => setFormData({ ...formData, appointmentId: e.target.value })}
-                placeholder="e.g. APT-2001 or Walk-in"
+                placeholder="Select appointment or Walk-in"
+                searchPlaceholder="Search appointment ID or patient..."
                 className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white"
+                options={[
+                  { value: 'Walk-in', label: 'Walk-in Consultation' },
+                  ...appointments.map((apt) => ({
+                    value: apt.id,
+                    label: `${apt.id} — ${apt.patientName}`,
+                    sublabel: `${apt.doctorName} • ${apt.date} (${apt.time})`,
+                  })),
+                ]}
               />
             </div>
 
@@ -527,13 +568,30 @@ export const PrescriptionsPage = () => {
                   className="grid grid-cols-12 gap-2 items-center p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs"
                 >
                   <div className="col-span-12 sm:col-span-3">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Medicine name"
+                    <SearchableSelect
+                      allowCustom={true}
                       value={med.name}
-                      onChange={(e) => updateMedicineRow(idx, 'name', e.target.value)}
+                      onChange={(e) => {
+                        const chosenVal = e.target.value;
+                        updateMedicineRow(idx, 'name', chosenVal);
+                        const matched = commonMedicines.find(
+                          (m) => m.name.toLowerCase() === chosenVal.toLowerCase()
+                        );
+                        if (matched) {
+                          if (!med.dosage) updateMedicineRow(idx, 'dosage', matched.dosage);
+                          if (!med.frequency) updateMedicineRow(idx, 'frequency', matched.frequency);
+                          if (!med.duration) updateMedicineRow(idx, 'duration', matched.duration);
+                          if (!med.instructions) updateMedicineRow(idx, 'instructions', matched.instructions);
+                        }
+                      }}
+                      placeholder="Select or type medicine..."
+                      searchPlaceholder="Search 25+ medicines..."
                       className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs font-semibold bg-white"
+                      options={commonMedicines.map((m) => ({
+                        value: m.name,
+                        label: m.name,
+                        sublabel: `${m.category} • ${m.dosage}`,
+                      }))}
                     />
                   </div>
 

@@ -12,6 +12,7 @@ import { ExpensesPage } from '../pages/expenses/ExpensesPage';
 import { AccountsPage } from '../pages/accounts/AccountsPage';
 import { ChartOfAccountsPage } from '../pages/chart-of-accounts/ChartOfAccountsPage';
 import { UsersPage } from '../pages/users/UsersPage';
+import { SettingsPage } from '../pages/settings/SettingsPage';
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
       {
         path: 'users',
         element: <UsersPage />,
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
       },
       {
         path: '*',

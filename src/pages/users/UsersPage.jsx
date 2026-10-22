@@ -22,6 +22,7 @@ import { DataTable } from '../../components/common/DataTable';
 import { FilterBar } from '../../components/common/FilterBar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
+import { SearchableSelect } from '../../components/common/SearchableSelect';
 import { ConfirmationDialog } from '../../components/common/ConfirmationDialog';
 import { defaultRolePermissions } from '../../data/mockUsers';
 
@@ -318,18 +319,21 @@ export const UsersPage = () => {
             }}
             totalResults={filteredUsers.length}
           >
-            <select
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-              className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
-            >
-              <option value="ALL">All Roles</option>
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
+            <div className="min-w-[150px]">
+              <SearchableSelect
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs"
+                searchPlaceholder="Filter role..."
+              >
+                <option value="ALL">All Roles</option>
+                {ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </SearchableSelect>
+            </div>
           </FilterBar>
 
           {/* Users Table */}
@@ -498,31 +502,33 @@ export const UsersPage = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Role *
               </label>
-              <select
+              <SearchableSelect
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold"
+                searchPlaceholder="Search role..."
               >
                 {ROLES.map((r) => (
                   <option key={r} value={r}>
                     {r}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Status
               </label>
-              <select
+              <SearchableSelect
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                searchPlaceholder="Search status..."
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
-              </select>
+              </SearchableSelect>
             </div>
           </div>
 
@@ -532,10 +538,12 @@ export const UsersPage = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Link to Attending Doctor Profile
               </label>
-              <select
+              <SearchableSelect
                 value={formData.assignedDoctorId}
                 onChange={(e) => setFormData({ ...formData, assignedDoctorId: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
+                placeholder="Select Doctor Profile"
+                searchPlaceholder="Search doctor or specialty..."
               >
                 <option value="">Select Doctor Profile</option>
                 {doctors.map((d) => (
@@ -543,7 +551,7 @@ export const UsersPage = () => {
                     {d.name} ({d.specialization})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           )}
 

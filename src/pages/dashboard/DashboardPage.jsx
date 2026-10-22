@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Calendar,
   Users,
@@ -50,7 +50,25 @@ export const DashboardPage = () => {
     openDocument,
   } = useClinic();
 
+  const [searchParams] = useSearchParams();
   const [dateFilter, setDateFilter] = useState('all'); // 'today' | 'week' | 'all'
+
+  // React to Sub-Tab scroll navigation
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section === 'appointments' || section === 'waiting') {
+      const el = document.getElementById('appointments-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (section === 'billing') {
+      const el = document.getElementById('payments-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (section === 'expenses') {
+      const el = document.getElementById('expenses-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (!section) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [searchParams]);
 
   // Dynamic KPI calculations based on current mock records
   const kpis = useMemo(() => {
@@ -474,7 +492,7 @@ export const DashboardPage = () => {
       </div>
 
       {/* Today's Appointments Section with Responsive Mobile Cards View */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden">
+      <div id="appointments-section" className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden scroll-mt-28">
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -638,7 +656,7 @@ export const DashboardPage = () => {
       {/* Recent Activity: Payments & Expenses side-by-side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Payments */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden flex flex-col justify-between">
+        <div id="payments-section" className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden flex flex-col justify-between scroll-mt-28">
           <div>
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">
@@ -696,7 +714,7 @@ export const DashboardPage = () => {
         </div>
 
         {/* Recent Expenses */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden flex flex-col justify-between">
+        <div id="expenses-section" className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden flex flex-col justify-between scroll-mt-28">
           <div>
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">

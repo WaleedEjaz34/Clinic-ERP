@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   Table as TableIcon,
 } from 'lucide-react';
+import { SearchableSelect } from './SearchableSelect';
 
 export const DataTable = ({
   columns,
@@ -273,20 +274,25 @@ export const DataTable = ({
 
             <div className="flex items-center gap-1.5">
               <span className="text-slate-500 text-[11px]">Per page:</span>
-              <select
-                value={rowsPerPage}
-                onChange={(e) => {
-                  setRowsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className="bg-white border border-slate-200 text-slate-800 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-2xs font-medium cursor-pointer"
-              >
-                {rowsPerPageOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+              <div className="w-20">
+                <SearchableSelect
+                  placement="top"
+                  value={rowsPerPage}
+                  onChange={(e) => {
+                    setRowsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-white border border-slate-200 text-slate-800 rounded-lg px-2 py-1 text-xs shadow-2xs font-medium cursor-pointer"
+                  searchPlaceholder="Rows..."
+                  menuClassName="min-w-[90px]"
+                >
+                  {rowsPerPageOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </SearchableSelect>
+              </div>
             </div>
           </div>
 
