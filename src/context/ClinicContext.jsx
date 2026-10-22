@@ -9,6 +9,7 @@ import { initialAccounts } from '../data/mockAccounts';
 import { initialCategories } from '../data/mockCategories';
 import { initialExpenses } from '../data/mockExpenses';
 import { initialUsers, defaultRolePermissions } from '../data/mockUsers';
+import { initialNotifications } from '../data/mockNotifications';
 
 const ClinicContext = createContext(null);
 
@@ -24,6 +25,7 @@ const STORAGE_KEYS = {
   EXPENSES: 'medpulse_expenses_v1',
   USERS: 'medpulse_users_v1',
   CURRENT_USER: 'medpulse_current_user_v1',
+  NOTIFICATIONS: 'medpulse_notifications_v1',
 };
 
 const getStored = (key, fallback) => {
@@ -48,6 +50,7 @@ export const ClinicProvider = ({ children }) => {
   const [categories, setCategories] = useState(() => getStored(STORAGE_KEYS.CATEGORIES, initialCategories));
   const [expenses, setExpenses] = useState(() => getStored(STORAGE_KEYS.EXPENSES, initialExpenses));
   const [users, setUsers] = useState(() => getStored(STORAGE_KEYS.USERS, initialUsers));
+  const [notifications, setNotifications] = useState(() => getStored(STORAGE_KEYS.NOTIFICATIONS, initialNotifications));
   
   // Current user & role simulation
   const [currentUser, setCurrentUser] = useState(() => getStored(STORAGE_KEYS.CURRENT_USER, initialUsers[0]));
@@ -76,10 +79,11 @@ export const ClinicProvider = ({ children }) => {
       localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
     } catch (err) {
       console.error('Failed to sync to LocalStorage', err);
     }
-  }, [doctors, patients, appointments, prescriptions, bills, payments, accounts, categories, expenses, users, currentUser]);
+  }, [doctors, patients, appointments, prescriptions, bills, payments, accounts, categories, expenses, users, currentUser, notifications]);
 
   // Toast helpers
   const addToast = (type, title, message) => {
@@ -131,9 +135,64 @@ export const ClinicProvider = ({ children }) => {
     setExpenses(initialExpenses);
     setUsers(initialUsers);
     setCurrentUser(initialUsers[0]);
+    setNotifications(initialNotifications);
     localStorage.clear();
     addToast('success', 'Reset Complete', 'All demo records restored to initial values.');
   };
+
+  // ==========================================
+  // NOTIFICATIONS SYSTEM
+  // ==========================================
+  const markNotificationAsRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markNotificationAsUnread = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: false } : n))
+    );
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    addToast('info', 'Alerts Cleared', 'All pending notifications marked as read.');
+  };
+
+  const deleteNotification = (id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    addToast('info', 'Notification Removed', 'Notification removed from activity log.');
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    addToast('info', 'Notifications Cleared', 'All notification records cleared.');
+  };
+
+  const addNotification = ({ title, message, type = 'system', link = '/', actionText = 'View' }) => {
+    const newNotif = {
+      id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      title,
+      message,
+      type,
+      timestamp: new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      timeAgo: 'Just now',
+      read: false,
+      link,
+      actionText,
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+    return newNotif;
+  };
+
+  const unreadNotifCount = notifications.filter((n) => !n.read).length;
 
   // ==========================================
   // PATIENT CRUD & ACTIONS
@@ -148,6 +207,13 @@ export const ClinicProvider = ({ children }) => {
       status: patientData.status || 'Active',
     };
     setPatients((prev) => [newPatient, ...prev]);
+    addNotification({
+      title: 'New Patient Registered',
+      message: `${newPatient.name} (MR #${newId}) registered with contact ${newPatient.phone || 'N/A'}.`,
+      type: 'patient',
+      link: '/patients',
+      actionText: 'View Patient',
+    });
     addToast('success', 'Patient Registered', `${newPatient.name} (ID: ${newId}) registered successfully.`);
     return newPatient;
   };
@@ -236,6 +302,13 @@ export const ClinicProvider = ({ children }) => {
     };
 
     setAppointments((prev) => [newApt, ...prev]);
+    addNotification({
+      title: 'Appointment Scheduled',
+      message: `${newApt.patientName} scheduled with ${newApt.doctorName} on ${newApt.date} at ${newApt.time}.`,
+      type: 'appointment',
+      link: '/appointments',
+      actionText: 'View Appointment',
+    });
     addToast('success', 'Appointment Scheduled', `Appointment ${newId} confirmed for ${newApt.patientName}.`);
     return { success: true, appointment: newApt };
   };
@@ -301,6 +374,13 @@ export const ClinicProvider = ({ children }) => {
       );
     }
 
+    addNotification({
+      title: 'Prescription Finalized',
+      message: `Prescription #${newId} finalized for ${newRx.patientName} by ${newRx.doctorName}.`,
+      type: 'prescription',
+      link: '/prescriptions',
+      actionText: 'View Rx',
+    });
     addToast('success', 'Prescription Saved', `Prescription ${newId} created for ${newRx.patientName}.`);
     return newRx;
   };
@@ -374,6 +454,13 @@ export const ClinicProvider = ({ children }) => {
       );
     }
 
+    addNotification({
+      title: 'New Bill Generated',
+      message: `Bill #${newBillNum} generated for ${newBill.patientName} for Rs. ${totalAmount.toLocaleString()} (${status}).`,
+      type: 'billing',
+      link: '/bills',
+      actionText: 'View Bill',
+    });
     addToast('success', 'Bill Generated', `Bill ${newBillNum} generated for ${newBill.patientName}.`);
     return newBill;
   };
@@ -510,6 +597,13 @@ export const ClinicProvider = ({ children }) => {
       )
     );
 
+    addNotification({
+      title: 'Payment Received',
+      message: `Rs. ${amount.toLocaleString()} received via ${newPayment.paymentMethod || 'Cash'} for Bill #${bill.billNumber} (${newPayment.patientName}).`,
+      type: 'payment',
+      link: '/payments',
+      actionText: 'View Receipt',
+    });
     addToast('success', 'Payment Collected', `Receipt ${newReceiptNum} generated. Rs. ${amount} deposited to ${account.name}.`);
     return { success: true, payment: newPayment };
   };
@@ -559,6 +653,13 @@ export const ClinicProvider = ({ children }) => {
       )
     );
 
+    addNotification({
+      title: 'Expense Recorded',
+      message: `Rs. ${amount.toLocaleString()} disbursed for ${newExpense.title} (${newExpense.categoryName}) from ${account.name}.`,
+      type: 'expense',
+      link: '/expenses',
+      actionText: 'View Expense',
+    });
     addToast('success', 'Expense Recorded', `Expense of Rs. ${amount} deducted from ${account.name}.`);
     return { success: true, expense: newExpense };
   };
@@ -822,6 +923,16 @@ export const ClinicProvider = ({ children }) => {
         toasts,
         addToast,
         removeToast,
+
+        // Notifications system
+        notifications,
+        unreadNotifCount,
+        markNotificationAsRead,
+        markNotificationAsUnread,
+        markAllNotificationsAsRead,
+        deleteNotification,
+        clearAllNotifications,
+        addNotification,
 
         // Document preview system
         documentModal,

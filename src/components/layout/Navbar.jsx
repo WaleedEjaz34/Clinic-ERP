@@ -23,6 +23,8 @@ import {
   ChevronRight,
   Bell,
   Check,
+  CheckCheck,
+  ArrowRight,
   UserCheck,
   LogOut,
   Settings,
@@ -202,6 +204,37 @@ const MAIN_NAV_ITEMS = [
   },
 ];
 
+const getNotifIcon = (type) => {
+  switch (type) {
+    case 'patient': return Users;
+    case 'appointment': return Calendar;
+    case 'prescription': return FileText;
+    case 'billing': return Receipt;
+    case 'payment': return CreditCard;
+    case 'expense': return TrendingDown;
+    default: return Bell;
+  }
+};
+
+const getNotifStyle = (type) => {
+  switch (type) {
+    case 'patient':
+      return { bg: 'bg-blue-50', border: 'border-blue-200/80', text: 'text-blue-600' };
+    case 'appointment':
+      return { bg: 'bg-amber-50', border: 'border-amber-200/80', text: 'text-amber-600' };
+    case 'prescription':
+      return { bg: 'bg-indigo-50', border: 'border-indigo-200/80', text: 'text-indigo-600' };
+    case 'billing':
+      return { bg: 'bg-purple-50', border: 'border-purple-200/80', text: 'text-purple-600' };
+    case 'payment':
+      return { bg: 'bg-emerald-50', border: 'border-emerald-200/80', text: 'text-emerald-600' };
+    case 'expense':
+      return { bg: 'bg-rose-50', border: 'border-rose-200/80', text: 'text-rose-600' };
+    default:
+      return { bg: 'bg-slate-50', border: 'border-slate-200/80', text: 'text-slate-600' };
+  }
+};
+
 export const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -213,6 +246,10 @@ export const Navbar = () => {
     bills,
     resetAllData,
     addToast,
+    notifications,
+    unreadNotifCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
   } = useClinic();
 
   // Mobile menu drawer state
@@ -223,6 +260,7 @@ export const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
+  const notifRef = useRef(null);
   const searchInputRef = useRef(null);
   const mobileSearchInputRef = useRef(null);
 
@@ -435,6 +473,9 @@ export const Navbar = () => {
     const handleOutside = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setIsSearchOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifMenu(false);
       }
     };
     document.addEventListener('mousedown', handleOutside);
@@ -735,7 +776,7 @@ export const Navbar = () => {
           </div>
 
           {/* Notification Bell */}
-          <div className="relative">
+          <div ref={notifRef} className="relative">
             <button
               onClick={() => {
                 setShowNotifMenu(!showNotifMenu);
@@ -744,45 +785,144 @@ export const Navbar = () => {
                 setShowProfileMenu(false);
               }}
               className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors relative"
-              title="Notifications"
+              title="Clinic Alerts & Notifications"
+              aria-label="Clinic Alerts & Notifications"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />
+              {unreadNotifCount > 0 ? (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center ring-2 ring-white shadow-xs animate-in zoom-in-75">
+                  {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+                </span>
+              ) : (
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-slate-300 rounded-full" />
+              )}
             </button>
 
             {showNotifMenu && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl border border-slate-200 shadow-modal p-3 z-50 text-xs animate-in fade-in zoom-in-95">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <span className="font-bold text-slate-900">Clinic Alerts</span>
-                  <span
-                    onClick={() => {
-                      addToast('info', 'Alerts Cleared', 'All pending notifications marked as read.');
-                      setShowNotifMenu(false);
-                    }}
-                    className="text-[10px] text-brand-600 font-semibold cursor-pointer hover:underline"
-                  >
-                    Mark all read
-                  </span>
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 md:w-[440px] max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl border border-slate-200/90 shadow-2xl z-50 animate-in fade-in zoom-in-95 overflow-hidden flex flex-col">
+                {/* Header */}
+                <div className="px-4 py-3 bg-slate-50/90 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900 text-xs sm:text-sm">Clinic Alerts</span>
+                    {unreadNotifCount > 0 ? (
+                      <span className="px-2 py-0.5 bg-rose-100 text-rose-700 rounded-full text-[10px] font-bold">
+                        {unreadNotifCount} new
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-[10px] font-medium">
+                        All read
+                      </span>
+                    )}
+                  </div>
+
+                  {unreadNotifCount > 0 && (
+                    <button
+                      onClick={() => markAllNotificationsAsRead()}
+                      className="text-[11px] text-brand-600 hover:text-brand-800 font-bold flex items-center gap-1 hover:underline transition-colors"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      <span>Mark all read</span>
+                    </button>
+                  )}
                 </div>
-                <div className="mt-2 space-y-2">
-                  <div className="p-2 rounded-lg bg-amber-50/70 border border-amber-100">
-                    <p className="font-semibold text-amber-900">Patient Waiting in OPD</p>
-                    <p className="text-[11px] text-amber-700 mt-0.5">
-                      Fatima Zahra checked in for Dr. Ayesha Siddiqui.
-                    </p>
-                  </div>
-                  <div className="p-2 rounded-lg bg-emerald-50/70 border border-emerald-100">
-                    <p className="font-semibold text-emerald-900">Payment Deposited</p>
-                    <p className="text-[11px] text-emerald-700 mt-0.5">
-                      Rs. 1,500 cash payment received from Muhammad Rizwan.
-                    </p>
-                  </div>
-                  <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                    <p className="font-semibold text-slate-800">Appointment Scheduled</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Ahmed Hassan booked with Dr. Farhan Qureshi.
-                    </p>
-                  </div>
+
+                {/* Fixed max-height list with vertical scrolling */}
+                <div className="max-h-[380px] sm:max-h-[420px] overflow-y-auto divide-y divide-slate-100 p-1.5">
+                  {notifications.length === 0 ? (
+                    <div className="py-8 px-4 text-center">
+                      <Bell className="w-7 h-7 text-slate-300 mx-auto mb-1.5 stroke-[1.5]" />
+                      <p className="text-xs font-semibold text-slate-700">No Alerts Pending</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">All activity logs will appear here in real time.</p>
+                    </div>
+                  ) : (
+                    notifications.slice(0, 15).map((n) => {
+                      const IconComp = getNotifIcon(n.type);
+                      const style = getNotifStyle(n.type);
+                      return (
+                        <div
+                          key={n.id}
+                          className={`p-3 transition-colors rounded-xl flex items-start gap-3 hover:bg-slate-50/90 relative group ${
+                            !n.read ? 'bg-brand-50/35' : 'bg-transparent'
+                          }`}
+                        >
+                          {/* Type Icon Badge */}
+                          <div
+                            className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 border shadow-2xs ${style.bg} ${style.border}`}
+                          >
+                            <IconComp className={`w-4 h-4 ${style.text}`} />
+                          </div>
+
+                          {/* Title & Message */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                              <p className={`text-xs font-bold leading-tight ${!n.read ? 'text-slate-900' : 'text-slate-700'}`}>
+                                {n.title}
+                              </p>
+                              <span className="text-[10px] text-slate-400 whitespace-nowrap flex-shrink-0 ml-1">
+                                {n.timeAgo || n.timestamp}
+                              </span>
+                            </div>
+
+                            <p className="text-[11px] text-slate-600 leading-snug break-words">
+                              {n.message}
+                            </p>
+
+                            {/* Action & Individual Mark as Read */}
+                            <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-100/70">
+                              {n.link ? (
+                                <button
+                                  onClick={() => {
+                                    if (!n.read) markNotificationAsRead(n.id);
+                                    setShowNotifMenu(false);
+                                    navigate(n.link);
+                                  }}
+                                  className="text-[11px] font-bold text-brand-600 hover:text-brand-800 flex items-center gap-1 hover:underline"
+                                >
+                                  <span>{n.actionText || 'Open'}</span>
+                                  <ArrowRight className="w-3 h-3" />
+                                </button>
+                              ) : (
+                                <span />
+                              )}
+
+                              {!n.read && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markNotificationAsRead(n.id);
+                                  }}
+                                  className="text-[10px] text-slate-500 hover:text-brand-700 font-bold px-2 py-0.5 rounded-md hover:bg-white border border-transparent hover:border-slate-200 transition-all flex items-center gap-1 shadow-2xs"
+                                  title="Mark this notification as read"
+                                >
+                                  <Check className="w-3 h-3 stroke-[2.5]" />
+                                  <span>Mark read</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Unread indicator dot */}
+                          {!n.read && (
+                            <span className="w-2 h-2 rounded-full bg-brand-500 absolute top-3 right-3 flex-shrink-0 ring-2 ring-white" />
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Pinned Bottom Action: View All Notifications */}
+                <div className="p-2.5 bg-slate-50 border-t border-slate-100">
+                  <button
+                    onClick={() => {
+                      setShowNotifMenu(false);
+                      navigate('/notifications');
+                    }}
+                    className="w-full py-2.5 px-3 bg-white hover:bg-brand-50/80 border border-slate-200/90 hover:border-brand-300 rounded-xl text-xs font-bold text-slate-800 hover:text-brand-700 transition-all flex items-center justify-center gap-1.5 shadow-2xs group"
+                  >
+                    <span>View All Notifications</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
                 </div>
               </div>
             )}

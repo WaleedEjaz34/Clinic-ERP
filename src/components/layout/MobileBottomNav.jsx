@@ -21,6 +21,7 @@ import {
   FilePlus,
   Coins,
   ChevronRight,
+  Bell,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { SearchableSelect } from '../common/SearchableSelect';
@@ -28,7 +29,7 @@ import { SearchableSelect } from '../common/SearchableSelect';
 export const MobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, switchRole, resetAllData, addToast } = useClinic();
+  const { currentUser, switchRole, resetAllData, addToast, unreadNotifCount } = useClinic();
 
   const [showQuickSheet, setShowQuickSheet] = useState(false);
   const [showMoreSheet, setShowMoreSheet] = useState(false);
@@ -481,6 +482,36 @@ export const MobileBottomNav = () => {
                     </div>
                   </button>
                 </div>
+              </div>
+
+              {/* Notifications & System Activity */}
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1 mb-1.5">
+                  Alerts & Activity
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleActionClick('/notifications')}
+                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-rose-50/50 hover:bg-rose-100/70 border border-rose-200/70 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-rose-500 text-white shadow-xs flex-shrink-0">
+                      <Bell className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-900 block">Notifications & Alerts</span>
+                        {unreadNotifCount > 0 && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500 text-white">
+                            {unreadNotifCount} new
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-500">OPD queue, receipts, Rx, and system logs</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
               </div>
 
               {/* Users & Settings */}

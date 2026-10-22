@@ -13,6 +13,7 @@ import { AccountsPage } from '../pages/accounts/AccountsPage';
 import { ChartOfAccountsPage } from '../pages/chart-of-accounts/ChartOfAccountsPage';
 import { UsersPage } from '../pages/users/UsersPage';
 import { SettingsPage } from '../pages/settings/SettingsPage';
+import { NotificationsPage } from '../pages/notifications/NotificationsPage';
 
 export const router = createBrowserRouter([
   {
@@ -66,6 +67,10 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: <SettingsPage />,
+      },
+      {
+        path: 'notifications',
+        element: <NotificationsPage />,
       },
       {
         path: '*',
