@@ -11,7 +11,7 @@ export const AppLayout = () => {
       <Navbar />
 
       {/* Main Content Area - Full Screen Responsive Container */}
-      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 sm:py-6 w-full">
+      <main className="flex-1 px-2.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 w-full">
         <Outlet />
       </main>
 

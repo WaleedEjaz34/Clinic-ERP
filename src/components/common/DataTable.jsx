@@ -138,11 +138,11 @@ export const DataTable = ({
       ) : (
         <>
           {/* ================= MOBILE CARDS VIEW (md:hidden when viewMode is 'cards' or 'auto') ================= */}
-          <div className={`${viewMode === 'table' ? 'hidden' : 'md:hidden'} p-3.5 space-y-3 bg-slate-50/50`}>
+          <div className={`${viewMode === 'table' ? 'hidden' : 'md:hidden'} p-2 sm:p-3.5 space-y-2.5 sm:space-y-3 bg-slate-50/50`}>
             {paginatedData.map((row, rowIndex) => (
               <div
                 key={row[keyField] || rowIndex}
-                className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm space-y-3 hover:border-brand-300 transition-all"
+                className="bg-white rounded-xl border border-slate-200/90 p-3 sm:p-4 shadow-sm space-y-3 hover:border-brand-300 transition-all"
               >
                 {/* Header row: Primary column + Status or ID */}
                 <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-100">

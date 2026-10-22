@@ -15,7 +15,7 @@ export const KPICard = ({
   return (
     <div
       onClick={onClick}
-      className={`group relative bg-white rounded-2xl border ${accentColor} p-4 sm:p-5 shadow-card hover:shadow-card-hover transition-all duration-200 overflow-hidden flex flex-col justify-between ${
+      className={`group relative bg-white rounded-2xl border ${accentColor} p-3.5 sm:p-5 shadow-card hover:shadow-card-hover transition-all duration-200 overflow-hidden flex flex-col justify-between ${
         onClick ? 'cursor-pointer hover:border-brand-400 active:scale-[0.99]' : ''
       }`}
     >

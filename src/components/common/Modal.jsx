@@ -37,9 +37,9 @@ export const Modal = ({
       />
 
       {/* Modal Container */}
-      <div className="flex min-h-full items-center justify-center p-3 sm:p-6">
+      <div className="flex min-h-full items-center justify-center p-2 sm:p-6">
         <div
-          className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-modal border border-slate-200/90 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]`}
+          className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-modal border border-slate-200/90 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 flex flex-col max-h-[96vh] sm:max-h-[92vh]`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top subtle brand accent line */}

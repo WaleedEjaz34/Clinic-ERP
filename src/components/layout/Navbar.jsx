@@ -441,8 +441,8 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* Role Switcher Pill (Interactive Simulator) */}
-          <div className="relative">
+          {/* Role Switcher Pill (Interactive Simulator - hidden on mobile, available in drawer) */}
+          <div className="relative hidden sm:block">
             <button
               onClick={() => {
                 setShowRoleMenu(!showRoleMenu);

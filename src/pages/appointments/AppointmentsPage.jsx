@@ -504,7 +504,8 @@ export const AppointmentsPage = () => {
 
           {/* Month Calendar Grid */}
           {calendarMode === 'month' && (
-            <div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[640px] sm:min-w-0">
               {/* Day headers */}
               <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100/70 text-center py-2 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                 <div>Mon</div>
@@ -577,11 +578,13 @@ export const AppointmentsPage = () => {
                 })}
               </div>
             </div>
+          </div>
           )}
 
           {/* Week View */}
           {calendarMode === 'week' && (
-            <div className="grid grid-cols-7 divide-x divide-slate-200">
+            <div className="overflow-x-auto">
+              <div className="min-w-[640px] sm:min-w-0 grid grid-cols-7 divide-x divide-slate-200">
               {weekDays.map((day, idx) => {
                 const dayStr = format(day, 'yyyy-MM-dd');
                 const dayApts = appointments.filter((a) => a.date === dayStr);
@@ -624,6 +627,7 @@ export const AppointmentsPage = () => {
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
 
