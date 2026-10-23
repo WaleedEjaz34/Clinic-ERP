@@ -12,6 +12,7 @@ import { initialUsers, defaultRolePermissions } from '../data/mockUsers';
 import { initialNotifications } from '../data/mockNotifications';
 import { initialMedicines } from '../data/mockMedicines';
 import { initialTests } from '../data/mockTests';
+import { initialActivityLogs } from '../data/mockActivityLogs';
 
 const ClinicContext = createContext(null);
 
@@ -30,6 +31,7 @@ const STORAGE_KEYS = {
   NOTIFICATIONS: 'medpulse_notifications_v1',
   MEDICINES: 'medpulse_medicines_master_v1',
   TESTS: 'medpulse_tests_master_v1',
+  ACTIVITY_LOGS: 'medpulse_activity_logs_v1',
 };
 
 const getStored = (key, fallback) => {
@@ -57,6 +59,7 @@ export const ClinicProvider = ({ children }) => {
   const [notifications, setNotifications] = useState(() => getStored(STORAGE_KEYS.NOTIFICATIONS, initialNotifications));
   const [medicines, setMedicines] = useState(() => getStored(STORAGE_KEYS.MEDICINES, initialMedicines));
   const [tests, setTests] = useState(() => getStored(STORAGE_KEYS.TESTS, initialTests));
+  const [activityLogs, setActivityLogs] = useState(() => getStored(STORAGE_KEYS.ACTIVITY_LOGS, initialActivityLogs));
   
   // Current user & role simulation
   const [currentUser, setCurrentUser] = useState(() => getStored(STORAGE_KEYS.CURRENT_USER, initialUsers[0]));
@@ -88,10 +91,11 @@ export const ClinicProvider = ({ children }) => {
       localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
       localStorage.setItem(STORAGE_KEYS.MEDICINES, JSON.stringify(medicines));
       localStorage.setItem(STORAGE_KEYS.TESTS, JSON.stringify(tests));
+      localStorage.setItem(STORAGE_KEYS.ACTIVITY_LOGS, JSON.stringify(activityLogs));
     } catch (err) {
       console.error('Failed to sync to LocalStorage', err);
     }
-  }, [doctors, patients, appointments, prescriptions, bills, payments, accounts, categories, expenses, users, currentUser, notifications, medicines, tests]);
+  }, [doctors, patients, appointments, prescriptions, bills, payments, accounts, categories, expenses, users, currentUser, notifications, medicines, tests, activityLogs]);
 
   // Toast helpers
   const addToast = (type, title, message) => {
@@ -146,6 +150,7 @@ export const ClinicProvider = ({ children }) => {
     setNotifications(initialNotifications);
     setMedicines(initialMedicines);
     setTests(initialTests);
+    setActivityLogs(initialActivityLogs);
     localStorage.clear();
     addToast('success', 'Reset Complete', 'All demo records restored to initial values.');
   };
@@ -178,6 +183,47 @@ export const ClinicProvider = ({ children }) => {
   const clearAllNotifications = () => {
     setNotifications([]);
     addToast('info', 'Notifications Cleared', 'All notification records cleared.');
+  };
+
+  // ==========================================
+  // ACTIVITY & AUDIT LOG SYSTEM (IMMUTABLE)
+  // ==========================================
+  const logActivity = ({
+    action = 'Created',
+    actionBy,
+    module = 'System',
+    recordId = 'N/A',
+    recordTitle,
+    description,
+    details = {},
+  }) => {
+    const actor = actionBy || {
+      id: currentUser?.id || 'USR-SYS',
+      name: currentUser?.name || 'System User',
+      role: currentUser?.role || 'Admin',
+      avatar: currentUser?.avatar || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80',
+    };
+
+    const newLog = {
+      id: `ACT-${10000 + (activityLogs?.length || 0) + 1}`,
+      timestamp: new Date().toISOString(),
+      action,
+      actionBy: actor,
+      module,
+      recordId,
+      recordTitle: recordTitle || `${module} #${recordId}`,
+      description: description || 'System event recorded.',
+      details: {
+        ipAddress: '192.168.1.10',
+        terminal: 'Clinic Workstation (MedPulse ERP)',
+        sessionId: `SESS-${Date.now().toString(36).toUpperCase()}`,
+        ...details,
+      },
+      isImmutable: true,
+    };
+
+    setActivityLogs((prev) => [newLog, ...(prev || [])]);
+    return newLog;
   };
 
   const addNotification = ({ title, message, type = 'system', link = '/', actionText = 'View' }) => {
@@ -224,6 +270,14 @@ export const ClinicProvider = ({ children }) => {
       link: '/patients',
       actionText: 'View Patient',
     });
+    logActivity({
+      action: 'Created',
+      module: 'Patient',
+      recordId: newId,
+      recordTitle: `Patient #${newId} (${newPatient.name})`,
+      description: `New patient registered: ${newPatient.name} (MR #${newId}), Age ${newPatient.age || 'N/A'}, Phone ${newPatient.phone || 'N/A'}.`,
+      details: { patientName: newPatient.name, patientId: newId, phone: newPatient.phone, gender: newPatient.gender },
+    });
     addToast('success', 'Patient Registered', `${newPatient.name} (ID: ${newId}) registered successfully.`);
     return newPatient;
   };
@@ -232,6 +286,14 @@ export const ClinicProvider = ({ children }) => {
     setPatients((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updatedData } : p))
     );
+    logActivity({
+      action: 'Updated',
+      module: 'Patient',
+      recordId: id,
+      recordTitle: `Patient #${id}`,
+      description: `Updated clinical chart and profile details for patient record #${id}.`,
+      details: { patientId: id, updatedFields: Object.keys(updatedData) },
+    });
     addToast('success', 'Patient Updated', 'Patient record updated successfully.');
   };
 
@@ -241,6 +303,13 @@ export const ClinicProvider = ({ children }) => {
         p.id === id ? { ...p, status: p.status === 'Active' ? 'Inactive' : 'Active' } : p
       )
     );
+    logActivity({
+      action: 'Status Changed',
+      module: 'Patient',
+      recordId: id,
+      recordTitle: `Patient #${id}`,
+      description: `Patient status toggled for #${id}.`,
+    });
     addToast('info', 'Status Changed', 'Patient status updated.');
   };
 
@@ -319,6 +388,14 @@ export const ClinicProvider = ({ children }) => {
       link: '/appointments',
       actionText: 'View Appointment',
     });
+    logActivity({
+      action: 'Created',
+      module: 'Appointment',
+      recordId: newId,
+      recordTitle: `Appointment #${newId}`,
+      description: `Appointment #${newId} booked for ${newApt.patientName} with ${newApt.doctorName} on ${newApt.date} at ${newApt.time}.`,
+      details: { appointmentId: newId, patientName: newApt.patientName, doctorName: newApt.doctorName, date: newApt.date, time: newApt.time },
+    });
     addToast('success', 'Appointment Scheduled', `Appointment ${newId} confirmed for ${newApt.patientName}.`);
     return { success: true, appointment: newApt };
   };
@@ -347,6 +424,13 @@ export const ClinicProvider = ({ children }) => {
         return apt;
       })
     );
+    logActivity({
+      action: 'Updated',
+      module: 'Appointment',
+      recordId: id,
+      recordTitle: `Appointment #${id}`,
+      description: `Appointment #${id} updated with new schedule or doctor assignment.`,
+    });
     addToast('success', 'Appointment Updated', 'Appointment details updated.');
     return { success: true };
   };
@@ -355,6 +439,14 @@ export const ClinicProvider = ({ children }) => {
     setAppointments((prev) =>
       prev.map((apt) => (apt.id === id ? { ...apt, status: newStatus } : apt))
     );
+    logActivity({
+      action: 'Status Changed',
+      module: 'Appointment',
+      recordId: id,
+      recordTitle: `Appointment #${id}`,
+      description: `Appointment status updated to "${newStatus}" for appointment #${id}.`,
+      details: { appointmentId: id, newStatus },
+    });
     addToast('info', 'Status Updated', `Appointment marked as "${newStatus}".`);
   };
 
@@ -391,6 +483,14 @@ export const ClinicProvider = ({ children }) => {
       link: '/prescriptions',
       actionText: 'View Rx',
     });
+    logActivity({
+      action: 'Created',
+      module: 'Prescription',
+      recordId: newId,
+      recordTitle: `Prescription #${newId}`,
+      description: `Digital prescription issued for ${newRx.patientName} by ${newRx.doctorName} with ${(newRx.medicines || []).length} medications and ${(newRx.diagnosticTests || []).length} diagnostic tests.`,
+      details: { patientName: newRx.patientName, doctorName: newRx.doctorName, medicinesCount: (newRx.medicines || []).length, testsCount: (newRx.diagnosticTests || []).length },
+    });
     addToast('success', 'Prescription Saved', `Prescription ${newId} created for ${newRx.patientName}.`);
     return newRx;
   };
@@ -399,6 +499,13 @@ export const ClinicProvider = ({ children }) => {
     setPrescriptions((prev) =>
       prev.map((rx) => (rx.id === id ? { ...rx, ...updatedData } : rx))
     );
+    logActivity({
+      action: 'Updated',
+      module: 'Prescription',
+      recordId: id,
+      recordTitle: `Prescription #${id}`,
+      description: `Updated clinical prescription details for #${id}.`,
+    });
     addToast('success', 'Prescription Updated', 'Prescription details updated.');
   };
 
@@ -422,6 +529,14 @@ export const ClinicProvider = ({ children }) => {
     };
 
     setMedicines((prev) => [newMed, ...prev]);
+    logActivity({
+      action: 'Created',
+      module: 'Medicines Master',
+      recordId: newId,
+      recordTitle: `Medicine #${newMed.name}`,
+      description: `Added new medicine to master catalog: ${newMed.name} ${newMed.dosage} (${newMed.dosageForm}).`,
+      details: { medicineName: newMed.name, dosage: newMed.dosage, genericName: newMed.genericName },
+    });
     addToast('success', 'Medicine Added', `${newMed.name} (${newMed.dosage}) added to master catalog.`);
     return newMed;
   };
@@ -430,11 +545,25 @@ export const ClinicProvider = ({ children }) => {
     setMedicines((prev) =>
       prev.map((med) => (med.id === id ? { ...med, ...updatedData } : med))
     );
+    logActivity({
+      action: 'Updated',
+      module: 'Medicines Master',
+      recordId: id,
+      recordTitle: `Medicine #${id}`,
+      description: `Updated medicine master catalog details for record #${id}.`,
+    });
     addToast('success', 'Medicine Updated', 'Medicine master details updated.');
   };
 
   const deleteMedicine = (id) => {
     setMedicines((prev) => prev.filter((med) => med.id !== id));
+    logActivity({
+      action: 'Deleted',
+      module: 'Medicines Master',
+      recordId: id,
+      recordTitle: `Medicine #${id}`,
+      description: `Removed medicine record #${id} from catalog.`,
+    });
     addToast('info', 'Medicine Removed', 'Medicine removed from master catalog.');
   };
 
@@ -443,6 +572,13 @@ export const ClinicProvider = ({ children }) => {
       prev.map((med) => {
         if (med.id === id) {
           const nextStatus = med.status === 'Active' ? 'Inactive' : 'Active';
+          logActivity({
+            action: 'Status Changed',
+            module: 'Medicines Master',
+            recordId: id,
+            recordTitle: `Medicine #${med.name}`,
+            description: `${med.name} catalog status changed to "${nextStatus}".`,
+          });
           addToast('info', 'Status Changed', `${med.name} marked as ${nextStatus}.`);
           return { ...med, status: nextStatus };
         }
@@ -470,6 +606,14 @@ export const ClinicProvider = ({ children }) => {
     };
 
     setTests((prev) => [newTest, ...prev]);
+    logActivity({
+      action: 'Created',
+      module: 'Tests Master',
+      recordId: newId,
+      recordTitle: `Diagnostic Test #${newTest.name}`,
+      description: `Added new diagnostic test to catalog: ${newTest.name} (${newTest.category}).`,
+      details: { testName: newTest.name, category: newTest.category, shortCode: newTest.shortCode },
+    });
     addToast('success', 'Test Added', `${newTest.name} added to lab test master.`);
     return newTest;
   };
@@ -478,11 +622,25 @@ export const ClinicProvider = ({ children }) => {
     setTests((prev) =>
       prev.map((test) => (test.id === id ? { ...test, ...updatedData } : test))
     );
+    logActivity({
+      action: 'Updated',
+      module: 'Tests Master',
+      recordId: id,
+      recordTitle: `Diagnostic Test #${id}`,
+      description: `Updated diagnostic lab test details for #${id}.`,
+    });
     addToast('success', 'Test Updated', 'Diagnostic test master details updated.');
   };
 
   const deleteTest = (id) => {
     setTests((prev) => prev.filter((test) => test.id !== id));
+    logActivity({
+      action: 'Deleted',
+      module: 'Tests Master',
+      recordId: id,
+      recordTitle: `Diagnostic Test #${id}`,
+      description: `Removed diagnostic test #${id} from catalog.`,
+    });
     addToast('info', 'Test Removed', 'Test removed from lab master.');
   };
 
@@ -491,6 +649,13 @@ export const ClinicProvider = ({ children }) => {
       prev.map((test) => {
         if (test.id === id) {
           const nextStatus = test.status === 'Active' ? 'Inactive' : 'Active';
+          logActivity({
+            action: 'Status Changed',
+            module: 'Tests Master',
+            recordId: id,
+            recordTitle: `Diagnostic Test #${test.name}`,
+            description: `${test.name} diagnostic catalog status changed to "${nextStatus}".`,
+          });
           addToast('info', 'Status Changed', `${test.name} marked as ${nextStatus}.`);
           return { ...test, status: nextStatus };
         }
@@ -568,6 +733,21 @@ export const ClinicProvider = ({ children }) => {
       link: '/bills',
       actionText: 'View Bill',
     });
+    logActivity({
+      action: 'Created',
+      module: 'Patient Bill',
+      recordId: newBillNum,
+      recordTitle: `Patient Bill #${newBillNum}`,
+      description: `Invoice #${newBillNum} generated for ${newBill.patientName} totaling Rs. ${totalAmount.toLocaleString()} (${status}).`,
+      details: {
+        billNumber: newBillNum,
+        patientName: newBill.patientName,
+        totalAmount,
+        paidAmount,
+        balanceDue,
+        status,
+      },
+    });
     addToast('success', 'Bill Generated', `Bill ${newBillNum} generated for ${newBill.patientName}.`);
     return newBill;
   };
@@ -623,6 +803,14 @@ export const ClinicProvider = ({ children }) => {
           : b
       )
     );
+    logActivity({
+      action: 'Updated',
+      module: 'Patient Bill',
+      recordId: existing.billNumber,
+      recordTitle: `Patient Bill #${existing.billNumber}`,
+      description: `Updated billing charges and line items for invoice #${existing.billNumber}.`,
+      details: { billNumber: existing.billNumber, totalAmount, balanceDue, status },
+    });
     addToast('success', 'Bill Updated', `Bill ${existing.billNumber} recalculation applied.`);
   };
 
@@ -711,6 +899,23 @@ export const ClinicProvider = ({ children }) => {
       link: '/payments',
       actionText: 'View Receipt',
     });
+    logActivity({
+      action: 'Payment Collected',
+      module: 'Patient Bill',
+      recordId: bill.billNumber,
+      recordTitle: `Patient Bill #${bill.billNumber}`,
+      description: `Rs. ${amount.toLocaleString()} payment received from ${newPayment.patientName} into ${account.name}.`,
+      details: {
+        receiptNumber: newReceiptNum,
+        amount,
+        paymentMethod: paymentData.paymentMethod || 'Cash',
+        accountName: account.name,
+        patientName: newPayment.patientName,
+        billNumber: bill.billNumber,
+        previousBalanceDue: bill.balanceDue,
+        newBalanceDue,
+      },
+    });
     addToast('success', 'Payment Collected', `Receipt ${newReceiptNum} generated. Rs. ${amount} deposited to ${account.name}.`);
     return { success: true, payment: newPayment };
   };
@@ -767,6 +972,20 @@ export const ClinicProvider = ({ children }) => {
       link: '/expenses',
       actionText: 'View Expense',
     });
+    logActivity({
+      action: 'Created',
+      module: 'Expense',
+      recordId: newExpense.reference || newId,
+      recordTitle: `Expense Voucher #${newExpense.reference || newId}`,
+      description: `Expense voucher #${newExpense.reference || newId} of Rs. ${amount.toLocaleString()} recorded for "${newExpense.title}" under ${newExpense.categoryName} paid from ${account.name}.`,
+      details: {
+        amount,
+        category: newExpense.categoryName,
+        accountName: account.name,
+        voucherNumber: newExpense.reference,
+        vendor: newExpense.vendor || 'N/A',
+      },
+    });
     addToast('success', 'Expense Recorded', `Expense of Rs. ${amount} deducted from ${account.name}.`);
     return { success: true, expense: newExpense };
   };
@@ -814,6 +1033,13 @@ export const ClinicProvider = ({ children }) => {
       )
     );
 
+    logActivity({
+      action: 'Updated',
+      module: 'Expense',
+      recordId: existing.reference || id,
+      recordTitle: `Expense Voucher #${existing.reference || id}`,
+      description: `Updated expense voucher #${existing.reference || id} amount to Rs. ${newAmount.toLocaleString()}.`,
+    });
     addToast('success', 'Expense Updated', 'Expense voucher and account balance updated.');
     return { success: true };
   };
@@ -832,6 +1058,14 @@ export const ClinicProvider = ({ children }) => {
     );
 
     setExpenses((prev) => prev.filter((e) => e.id !== id));
+    logActivity({
+      action: 'Deleted',
+      module: 'Expense',
+      recordId: existing.reference || id,
+      recordTitle: `Expense Voucher #${existing.reference || id}`,
+      description: `Deleted expense voucher #${existing.reference || id} (Rs. ${existing.amount.toLocaleString()}) and restored funds to ${existing.accountName}.`,
+      details: { amount: existing.amount, accountName: existing.accountName, reason: 'Manual deletion by user' },
+    });
     addToast('info', 'Expense Deleted', `Rs. ${existing.amount} restored to ${existing.accountName}.`);
   };
 
@@ -1054,6 +1288,10 @@ export const ClinicProvider = ({ children }) => {
         deleteNotification,
         clearAllNotifications,
         addNotification,
+
+        // Activity & Audit Log system (Immutable)
+        activityLogs,
+        logActivity,
 
         // Document preview system
         documentModal,

@@ -165,17 +165,19 @@ const MAIN_NAV_ITEMS = [
     name: 'Settings',
     path: '/settings',
     icon: Settings,
-    subPaths: ['/settings'],
-    summary: 'Clinic profile, printing layouts, and system configurations.',
+    subPaths: ['/settings', '/activity-log', '/activity', '/settings/activity-log'],
+    summary: 'Clinic profile, printing layouts, audit trail, and system configurations.',
     subTabs: [
       { id: 'clinic', name: 'Clinic Settings', path: '/settings?tab=clinic', icon: Building2 },
       { id: 'printing', name: 'Printing Settings', path: '/settings?tab=printing', icon: Printer },
       { id: 'system', name: 'System Configurations', path: '/settings?tab=system', icon: Sliders },
+      { id: 'activity', name: 'Activity Log', path: '/activity-log', icon: History },
     ],
     subItems: [
       { name: 'Clinic Settings', path: '/settings?tab=clinic', icon: Building2, description: 'Clinic legal name, address, phone, and OPD hours' },
       { name: 'Printing Settings', path: '/settings?tab=printing', icon: Printer, description: 'A4, thermal formats, logo headers, and Rx footers' },
       { name: 'System Configurations', path: '/settings?tab=system', icon: Sliders, description: 'Date formats, timezones, and database backup/reset' },
+      { name: 'Activity & Audit Log', path: '/activity-log', icon: History, description: 'Complete chronological history of important actions across all clinic modules' },
     ],
   },
 ];
@@ -308,7 +310,9 @@ export const Navbar = () => {
       return MAIN_NAV_ITEMS.find((m) => m.id === 'users');
     }
     if (p.startsWith('/users')) return MAIN_NAV_ITEMS.find((m) => m.id === 'users');
-    if (p.startsWith('/settings')) return MAIN_NAV_ITEMS.find((m) => m.id === 'settings');
+    if (p.startsWith('/settings') || p.startsWith('/activity-log') || p.startsWith('/activity')) {
+      return MAIN_NAV_ITEMS.find((m) => m.id === 'settings');
+    }
     return MAIN_NAV_ITEMS[0];
   };
 
@@ -372,6 +376,7 @@ export const Navbar = () => {
     }
 
     if (modId === 'settings') {
+      if (currentPath.startsWith('/activity-log') || currentPath.startsWith('/activity')) return subTab.id === 'activity';
       const currentTab = params.get('tab') || 'clinic';
       return subTab.id === currentTab;
     }
@@ -948,6 +953,16 @@ export const Navbar = () => {
                 >
                   <ShieldCheck className="w-4 h-4 text-slate-500" />
                   <span>Roles & Permissions</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigate('/activity-log');
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full px-3.5 py-2 text-left hover:bg-slate-50 text-slate-700 flex items-center gap-2"
+                >
+                  <History className="w-4 h-4 text-slate-500" />
+                  <span>Activity & Audit Log</span>
                 </button>
                 <button
                   onClick={() => {

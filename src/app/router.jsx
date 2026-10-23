@@ -17,6 +17,7 @@ import { UsersPage } from '../pages/users/UsersPage';
 import { SettingsPage } from '../pages/settings/SettingsPage';
 import { NotificationsPage } from '../pages/notifications/NotificationsPage';
 import { DailyActivityReportPage } from '../pages/reports/DailyActivityReportPage';
+import { ActivityLogPage } from '../pages/activity/ActivityLogPage';
 
 export const router = createBrowserRouter([
   {
@@ -102,6 +103,22 @@ export const router = createBrowserRouter([
       {
         path: 'reports',
         element: <Navigate to="/reports/daily-summary" replace />,
+      },
+      {
+        path: 'activity-log',
+        element: <ActivityLogPage />,
+      },
+      {
+        path: 'activity',
+        element: <ActivityLogPage />,
+      },
+      {
+        path: 'reports/activity-log',
+        element: <ActivityLogPage />,
+      },
+      {
+        path: 'settings/activity-log',
+        element: <ActivityLogPage />,
       },
       {
         path: '*',

@@ -25,6 +25,7 @@ import {
   Pill,
   FlaskConical,
   CalendarDays,
+  History,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { SearchableSelect } from '../common/SearchableSelect';
@@ -599,8 +600,20 @@ export const MobileBottomNav = () => {
 
                   <button
                     type="button"
+                    onClick={() => handleActionClick('/activity-log')}
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-left col-span-2"
+                  >
+                    <History className="w-4 h-4 text-brand-600 flex-shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">Activity & Audit Log</span>
+                      <span className="text-[10px] text-slate-400">Complete immutable action trail</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={handleResetData}
-                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-rose-50/50 hover:bg-rose-100/70 border border-rose-200/80 text-left text-rose-700"
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-rose-50/50 hover:bg-rose-100/70 border border-rose-200/80 text-left text-rose-700 col-span-2"
                   >
                     <RotateCcw className="w-4 h-4 text-rose-600 flex-shrink-0" />
                     <div>
