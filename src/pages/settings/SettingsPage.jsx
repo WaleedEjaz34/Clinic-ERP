@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Building2,
-  ShieldCheck,
   Printer,
   Sliders,
   Save,
@@ -17,7 +16,6 @@ import {
   Receipt,
   FileText,
   UserCheck,
-  Check,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -26,7 +24,6 @@ import { ConfirmationDialog } from '../../components/common/ConfirmationDialog';
 
 const SETTING_TABS = [
   { id: 'clinic', label: 'Clinic Settings', icon: Building2 },
-  { id: 'roles', label: 'Roles & Permissions', icon: ShieldCheck },
   { id: 'printing', label: 'Printing Settings', icon: Printer },
   { id: 'system', label: 'System Configurations', icon: Sliders },
 ];
@@ -55,11 +52,17 @@ const PRINT_LAYOUTS = [
 
 export const SettingsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const currentTab = searchParams.get('tab') || 'clinic';
+  const rawTab = searchParams.get('tab');
+  const currentTab = SETTING_TABS.some((tab) => tab.id === rawTab) ? rawTab : 'clinic';
+
+  useEffect(() => {
+    if (rawTab === 'roles') {
+      setSearchParams({ tab: 'clinic' }, { replace: true });
+    }
+  }, [rawTab, setSearchParams]);
 
   const {
     currentUser,
-    switchRole,
     resetAllData,
     patients,
     doctors,
@@ -172,7 +175,7 @@ export const SettingsPage = () => {
     <div className="space-y-5">
       <PageHeader
         title="Clinic Settings & Configurations"
-        subtitle="Manage clinic profile, multi-role permissions, document printing parameters, and system backups."
+        subtitle="Manage clinic profile, document printing parameters, and system backups."
         breadcrumbs={[{ label: 'Settings' }]}
         actions={
           <div className="flex items-center gap-2">
@@ -405,126 +408,7 @@ export const SettingsPage = () => {
             </div>
           )}
 
-          {/* TAB 2: Roles & Permissions */}
-          {currentTab === 'roles' && (
-            <div className="space-y-6 animate-in fade-in">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">Roles & Access Permissions</h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Granular role permissions for system modules, clinical operations, and financial transactions.
-                </p>
-              </div>
-
-              {/* Role Switch Simulator */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <div>
-                  <span className="text-xs font-bold text-slate-800 block">Switch Active Simulated Role</span>
-                  <span className="text-[11px] text-slate-500">
-                    Immediately test navigation visibility and capabilities for any role.
-                  </span>
-                </div>
-                <div className="w-48">
-                  <SearchableSelect
-                    value={currentUser.role}
-                    onChange={(e) => switchRole(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-bold bg-white"
-                    searchPlaceholder="Search role..."
-                  >
-                    <option value="Admin">Admin (Full Control)</option>
-                    <option value="Doctor">Doctor (Clinical & EMR)</option>
-                    <option value="Receptionist">Receptionist (Appointments & Bills)</option>
-                    <option value="Accountant">Accountant (Ledgers & Finance)</option>
-                  </SearchableSelect>
-                </div>
-              </div>
-
-              {/* Mobile Permission Matrix Cards (md:hidden) */}
-              <div className="md:hidden space-y-2.5">
-                {[
-                  { module: 'Dashboard Overview', admin: true, doc: true, recep: true, acc: true },
-                  { module: 'Patients List & Medical Profile', admin: true, doc: true, recep: true, acc: false },
-                  { module: 'Appointments & Scheduling', admin: true, doc: true, recep: true, acc: false },
-                  { module: 'Prescriptions & Doctor EMR', admin: true, doc: true, recep: false, acc: false },
-                  { module: 'Patient Bills & Invoicing', admin: true, doc: false, recep: true, acc: true },
-                  { module: 'Payment Collection & Receipts', admin: true, doc: false, recep: true, acc: true },
-                  { module: 'Clinic Expense Vouchers', admin: true, doc: false, recep: false, acc: true },
-                  { module: 'Cashbook & Bank Accounts', admin: true, doc: false, recep: false, acc: true },
-                  { module: 'Chart of Accounts (COA)', admin: true, doc: false, recep: false, acc: true },
-                  { module: 'Doctors & Staff Management', admin: true, doc: false, recep: false, acc: false },
-                  { module: 'System Configurations & Settings', admin: true, doc: false, recep: false, acc: false },
-                ].map((row, idx) => (
-                  <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs space-y-2">
-                    <div className="font-bold text-slate-800">{row.module}</div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {row.admin && <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-bold border border-purple-200">Admin</span>}
-                      {row.doc && <span className="px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 text-[10px] font-bold border border-teal-200">Doctor</span>}
-                      {row.recep && <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200">Receptionist</span>}
-                      {row.acc && <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200">Accountant</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop Permission Matrix (hidden md:block) */}
-              <div className="hidden md:block border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                      <th className="py-2.5 px-3">Module</th>
-                      <th className="py-2.5 px-3 text-center">Admin</th>
-                      <th className="py-2.5 px-3 text-center">Doctor</th>
-                      <th className="py-2.5 px-3 text-center">Receptionist</th>
-                      <th className="py-2.5 px-3 text-center">Accountant</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {[
-                      { module: 'Dashboard Overview', admin: true, doc: true, recep: true, acc: true },
-                      { module: 'Patients List & Medical Profile', admin: true, doc: true, recep: true, acc: false },
-                      { module: 'Appointments & Scheduling', admin: true, doc: true, recep: true, acc: false },
-                      { module: 'Prescriptions & Doctor EMR', admin: true, doc: true, recep: false, acc: false },
-                      { module: 'Patient Bills & Invoicing', admin: true, doc: false, recep: true, acc: true },
-                      { module: 'Payment Collection & Receipts', admin: true, doc: false, recep: true, acc: true },
-                      { module: 'Clinic Expense Vouchers', admin: true, doc: false, recep: false, acc: true },
-                      { module: 'Cashbook & Bank Accounts', admin: true, doc: false, recep: false, acc: true },
-                      { module: 'Chart of Accounts (COA)', admin: true, doc: false, recep: false, acc: true },
-                      { module: 'Doctors & Staff Management', admin: true, doc: false, recep: false, acc: false },
-                      { module: 'System Configurations & Settings', admin: true, doc: false, recep: false, acc: false },
-                    ].map((row, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-2.5 px-3 font-semibold text-slate-800">{row.module}</td>
-                        <td className="py-2.5 px-3 text-center">
-                          {row.admin ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <span className="text-slate-300">—</span>}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          {row.doc ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <span className="text-slate-300">—</span>}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          {row.recep ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <span className="text-slate-300">—</span>}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          {row.acc ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <span className="text-slate-300">—</span>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-end">
-                <button
-                  type="button"
-                  onClick={() => handleSave('Roles & Permissions')}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors min-h-[44px]"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>Update Permissions</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: Printing Settings */}
+          {/* TAB 2: Printing Settings */}
           {currentTab === 'printing' && (
             <div className="space-y-6 animate-in fade-in">
               <div>

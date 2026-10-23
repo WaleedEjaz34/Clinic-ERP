@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   ShieldCheck,
   Plus,
@@ -55,9 +56,47 @@ export const UsersPage = () => {
     currentUser,
   } = useClinic();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') || searchParams.get('view');
+  const roleParam = searchParams.get('role');
+
   // Active view: 'users' listing vs 'matrix' permission matrix
-  const [activeView, setActiveView] = useState('users');
-  const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState('Doctor');
+  const isMatrixView = tabParam === 'permissions' || tabParam === 'matrix' || tabParam === 'roles';
+  const activeView = isMatrixView ? 'matrix' : 'users';
+
+  const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState(() => {
+    return roleParam && ROLES.includes(roleParam) ? roleParam : 'Doctor';
+  });
+
+  useEffect(() => {
+    if (roleParam && ROLES.includes(roleParam)) {
+      setSelectedRoleForMatrix(roleParam);
+    }
+  }, [roleParam]);
+
+  const handleViewChange = (view) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (view === 'matrix') {
+        next.set('tab', 'permissions');
+      } else {
+        next.delete('tab');
+        next.delete('view');
+        next.delete('role');
+      }
+      return next;
+    });
+  };
+
+  const handleSelectRoleForMatrix = (role) => {
+    setSelectedRoleForMatrix(role);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', 'permissions');
+      next.set('role', role);
+      return next;
+    });
+  };
 
   // Search & Filter state
   const [search, setSearch] = useState('');
@@ -275,7 +314,7 @@ export const UsersPage = () => {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shadow-2xs">
               <button
-                onClick={() => setActiveView('users')}
+                onClick={() => handleViewChange('users')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   activeView === 'users' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
@@ -284,7 +323,7 @@ export const UsersPage = () => {
                 <span>Staff Accounts</span>
               </button>
               <button
-                onClick={() => setActiveView('matrix')}
+                onClick={() => handleViewChange('matrix')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   activeView === 'matrix' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
@@ -362,7 +401,7 @@ export const UsersPage = () => {
               {ROLES.map((role) => (
                 <button
                   key={role}
-                  onClick={() => setSelectedRoleForMatrix(role)}
+                  onClick={() => handleSelectRoleForMatrix(role)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                     selectedRoleForMatrix === role
                       ? 'bg-brand-600 text-white shadow-sm'

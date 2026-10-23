@@ -73,7 +73,7 @@ export const initialNotifications = [
     timestamp: '2026-10-22 10:00 AM',
     timeAgo: '1 day ago',
     read: true,
-    link: '/settings?tab=roles',
+    link: '/users?tab=permissions',
     actionText: 'Review Roles',
   },
   {
