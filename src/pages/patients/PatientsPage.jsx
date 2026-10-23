@@ -391,13 +391,22 @@ export const PatientsPage = () => {
         subtitle="Manage permanent medical records, contact profiles, visit histories, and billing accounts."
         breadcrumbs={[{ label: 'Patients' }]}
         actions={
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-brand-600 via-brand-600 to-teal-600 hover:from-brand-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/25 hover:shadow-glow transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Register Patient</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/reports/outstanding-balances')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/90 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              <AlertTriangle className="w-4 h-4 text-rose-600" />
+              <span>Outstanding Balances</span>
+            </button>
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-brand-600 via-brand-600 to-teal-600 hover:from-brand-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/25 hover:shadow-glow transition-all active:scale-95"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Register Patient</span>
+            </button>
+          </div>
         }
       />
 

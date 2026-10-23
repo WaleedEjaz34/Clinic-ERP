@@ -39,6 +39,7 @@ import {
   Building2,
   Pill,
   FlaskConical,
+  AlertTriangle,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { SearchableSelect } from '../common/SearchableSelect';
@@ -113,11 +114,12 @@ const MAIN_NAV_ITEMS = [
     name: 'Finance',
     path: '/bills',
     icon: Receipt,
-    subPaths: ['/bills', '/payments', '/expenses', '/accounts', '/chart-of-accounts', '/reports', '/daily-summary', '/financial-summary'],
-    summary: 'Patient billing, fee collections, operational expenses, management financial summaries, daily activity reports, and cash/bank accounts.',
+    subPaths: ['/bills', '/payments', '/expenses', '/accounts', '/chart-of-accounts', '/reports', '/daily-summary', '/financial-summary', '/outstanding-balances'],
+    summary: 'Patient billing, fee collections, outstanding balances, operational expenses, management financial summaries, daily activity reports, and cash/bank accounts.',
     subTabs: [
       { id: 'bills', name: 'Patient Bills', path: '/bills', icon: Receipt },
       { id: 'payments', name: 'Payment Collection', path: '/payments', icon: CreditCard },
+      { id: 'outstanding', name: 'Outstanding Balances', path: '/reports/outstanding-balances', icon: AlertTriangle },
       { id: 'expenses', name: 'Expenses', path: '/expenses', icon: TrendingDown },
       { id: 'financial-summary', name: 'Financial Summary', path: '/reports/financial-summary', icon: Coins },
       { id: 'daily-report', name: 'Daily Activity Report', path: '/reports/daily-summary', icon: CalendarDays },
@@ -135,6 +137,7 @@ const MAIN_NAV_ITEMS = [
     subItems: [
       { name: 'Patient Bills', path: '/bills', icon: Receipt, description: 'Itemized consultation charges, procedures, and dues' },
       { name: 'Payment Collection', path: '/payments', icon: CreditCard, description: 'Collect patient dues, receipts, and deposit history' },
+      { name: 'Outstanding Balances Report', path: '/reports/outstanding-balances', icon: AlertTriangle, description: 'Patients with unpaid balances: billing date, totals, paid, and outstanding dues' },
       { name: 'Expenses', path: '/expenses', icon: TrendingDown, description: 'Disbursements, clinic operating costs, and vouchers' },
       { name: 'Financial Summary Report', path: '/reports/financial-summary', icon: Coins, description: 'Management financial performance summary: Income, Expenses, and Net Income' },
       { name: 'Daily Activity Summary Report', path: '/reports/daily-summary', icon: CalendarDays, description: 'One-row-per-date comprehensive clinical & financial summary ledger' },
@@ -300,7 +303,8 @@ export const Navbar = () => {
       p.startsWith('/chart-of-accounts') ||
       p.startsWith('/reports') ||
       p.startsWith('/daily-summary') ||
-      p.startsWith('/financial-summary')
+      p.startsWith('/financial-summary') ||
+      p.startsWith('/outstanding-balances')
     ) {
       return MAIN_NAV_ITEMS.find((m) => m.id === 'finance');
     }
@@ -347,6 +351,13 @@ export const Navbar = () => {
     }
 
     if (modId === 'finance') {
+      if (
+        currentPath.startsWith('/reports/outstanding-balances') ||
+        currentPath.startsWith('/reports/outstanding') ||
+        currentPath.startsWith('/outstanding-balances')
+      ) {
+        return subTab.id === 'outstanding';
+      }
       if (
         currentPath.startsWith('/reports/financial-summary') ||
         currentPath.startsWith('/financial-summary')

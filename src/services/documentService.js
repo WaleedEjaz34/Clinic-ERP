@@ -817,3 +817,182 @@ export const generateFinancialSummaryReportPDF = (rows, grandTotals, meta = {}) 
 
   doc.save(`Financial_Summary_Report_${new Date().toISOString().split('T')[0]}.pdf`);
 };
+
+// ==========================================
+// 7. OUTSTANDING PATIENT BALANCE REPORT PDF
+// ==========================================
+export const generateOutstandingBalancesReportPDF = (rows, grandTotals, meta = {}) => {
+  const { dateRangeText = 'All Time', patientFilter = 'All Patients', statusFilter = 'Outstanding (> 0)' } = meta;
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  // Header Banner
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, 297, 36, 'F');
+
+  // Clinic Brand
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text(CLINIC_INFO.name, 14, 12);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(148, 163, 184); // slate-400
+  doc.text(CLINIC_INFO.address, 14, 18);
+  doc.text(`Phone: ${CLINIC_INFO.phone}  |  ${CLINIC_INFO.email}`, 14, 23);
+
+  // Document Title
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(244, 63, 94); // rose-500
+  doc.text('OUTSTANDING PATIENT BALANCE REPORT', 297 - 14, 12, { align: 'right' });
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225);
+  doc.text(`Period: ${dateRangeText}  |  Patient Filter: ${patientFilter}`, 297 - 14, 18, { align: 'right' });
+  doc.text(`Status: ${statusFilter}  |  Records: ${rows.length}`, 297 - 14, 23, { align: 'right' });
+  doc.text(`Generated: ${formatDate(new Date(), 'dd MMM yyyy, hh:mm a')}`, 297 - 14, 28, { align: 'right' });
+
+  // Executive KPI summary boxes
+  const cardY = 42;
+  const cardWidth = 86;
+  const cardHeight = 16;
+
+  // Box 1: Total Billing
+  doc.setFillColor(248, 250, 252); // slate-50
+  doc.setDrawColor(226, 232, 240); // slate-200
+  doc.roundedRect(14, cardY, cardWidth, cardHeight, 2, 2, 'FD');
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(71, 85, 105);
+  doc.text('TOTAL BILLING AMOUNT', 18, cardY + 5.5);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text(formatCurrency(grandTotals.totalBilling || 0), 18, cardY + 12.5);
+
+  // Box 2: Total Paid
+  doc.setFillColor(240, 253, 250); // teal-50
+  doc.setDrawColor(204, 251, 241);
+  doc.roundedRect(14 + cardWidth + 5, cardY, cardWidth, cardHeight, 2, 2, 'FD');
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(13, 148, 136);
+  doc.text('TOTAL PAID / SETTLED', 14 + cardWidth + 9, cardY + 5.5);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(13, 148, 136);
+  doc.text(formatCurrency(grandTotals.totalPaid || 0), 14 + cardWidth + 9, cardY + 12.5);
+
+  // Box 3: Total Outstanding Balance
+  doc.setFillColor(255, 241, 242); // rose-50
+  doc.setDrawColor(254, 205, 211);
+  doc.roundedRect(14 + (cardWidth + 5) * 2, cardY, cardWidth, cardHeight, 2, 2, 'FD');
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(225, 29, 72);
+  doc.text('TOTAL OUTSTANDING BALANCE DUE', 14 + (cardWidth + 5) * 2 + 4, cardY + 5.5);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(225, 29, 72);
+  doc.text(formatCurrency(grandTotals.outstandingBalance || 0), 14 + (cardWidth + 5) * 2 + 4, cardY + 12.5);
+
+  // Table Body
+  const tableHead = [
+    [
+      'Patient ID',
+      'Patient Name',
+      'Phone',
+      'Billing Date',
+      'Total Billing',
+      'Total Paid',
+      'Outstanding Balance (Billing - Paid)',
+    ],
+  ];
+
+  const tableBody = rows.map((r) => [
+    r.patientId,
+    r.patientName,
+    r.phone || '—',
+    formatDate(r.billDate, 'dd MMM yyyy'),
+    formatCurrency(r.totalBilling),
+    formatCurrency(r.totalPaid),
+    formatCurrency(r.outstandingBalance),
+  ]);
+
+  const tableFoot = [
+    [
+      `Grand Total (${rows.length} ${rows.length === 1 ? 'Patient' : 'Patients'})`,
+      '—',
+      '—',
+      '—',
+      formatCurrency(grandTotals.totalBilling || 0),
+      formatCurrency(grandTotals.totalPaid || 0),
+      formatCurrency(grandTotals.outstandingBalance || 0),
+    ],
+  ];
+
+  autoTable(doc, {
+    startY: cardY + cardHeight + 8,
+    head: tableHead,
+    body: tableBody,
+    foot: tableFoot,
+    theme: 'grid',
+    styles: {
+      fontSize: 8.5,
+      cellPadding: 2.8,
+      textColor: [30, 41, 59],
+    },
+    headStyles: {
+      fillColor: [15, 23, 42],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    footStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [15, 23, 42],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    columnStyles: {
+      0: { halign: 'left', fontStyle: 'bold', cellWidth: 32 },
+      1: { halign: 'left', fontStyle: 'bold', cellWidth: 50 },
+      2: { halign: 'left', cellWidth: 38 },
+      3: { halign: 'center', cellWidth: 32 },
+      4: { halign: 'right', fontStyle: 'bold', cellWidth: 38 },
+      5: { halign: 'right', fontStyle: 'bold', textColor: [13, 148, 136], cellWidth: 38 },
+      6: { halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] },
+    },
+    didParseCell: (data) => {
+      if (data.section === 'body' && data.column.index === 6) {
+        data.cell.styles.textColor = [225, 29, 72];
+      }
+      if (data.section === 'foot' && data.column.index === 6) {
+        data.cell.styles.textColor = [225, 29, 72];
+      }
+    },
+  });
+
+  // Footer Signatures
+  const finalY = doc.lastAutoTable?.finalY || 160;
+  if (finalY < 185) {
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.line(18, finalY + 18, 70, finalY + 18);
+    doc.text('Prepared By (Billing / Credit Officer)', 18, finalY + 22);
+
+    doc.line(125, finalY + 18, 180, finalY + 18);
+    doc.text('Verified By (Accounts Manager)', 125, finalY + 22);
+
+    doc.line(230, finalY + 18, 280, finalY + 18);
+    doc.text('Approved By (Managing Director)', 230, finalY + 22);
+  }
+
+  doc.save(`Outstanding_Patient_Balances_${new Date().toISOString().split('T')[0]}.pdf`);
+};

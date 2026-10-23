@@ -22,6 +22,7 @@ import {
   Coins,
   DollarSign,
   Scale,
+  AlertTriangle,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -293,6 +294,13 @@ export const BillsPage = () => {
         breadcrumbs={[{ label: 'Patient Bills' }]}
         actions={
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/reports/outstanding-balances')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/90 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              <AlertTriangle className="w-4 h-4 text-rose-600" />
+              <span>Outstanding Balances</span>
+            </button>
             <button
               onClick={() => navigate('/reports/daily-summary')}
               className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"

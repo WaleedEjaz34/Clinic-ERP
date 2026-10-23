@@ -18,6 +18,7 @@ import { SettingsPage } from '../pages/settings/SettingsPage';
 import { NotificationsPage } from '../pages/notifications/NotificationsPage';
 import { DailyActivityReportPage } from '../pages/reports/DailyActivityReportPage';
 import { FinancialSummaryReportPage } from '../pages/reports/FinancialSummaryReportPage';
+import { OutstandingBalancesReportPage } from '../pages/reports/OutstandingBalancesReportPage';
 import { ActivityLogPage } from '../pages/activity/ActivityLogPage';
 import { RouteErrorBoundary } from '../components/common/RouteErrorBoundary';
 
@@ -114,6 +115,18 @@ export const router = createBrowserRouter([
       {
         path: 'reports/financial',
         element: <Navigate to="/reports/financial-summary" replace />,
+      },
+      {
+        path: 'reports/outstanding-balances',
+        element: <OutstandingBalancesReportPage />,
+      },
+      {
+        path: 'reports/outstanding',
+        element: <OutstandingBalancesReportPage />,
+      },
+      {
+        path: 'outstanding-balances',
+        element: <OutstandingBalancesReportPage />,
       },
       {
         path: 'reports',
