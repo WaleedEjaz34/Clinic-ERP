@@ -18,11 +18,13 @@ import { SettingsPage } from '../pages/settings/SettingsPage';
 import { NotificationsPage } from '../pages/notifications/NotificationsPage';
 import { DailyActivityReportPage } from '../pages/reports/DailyActivityReportPage';
 import { ActivityLogPage } from '../pages/activity/ActivityLogPage';
+import { RouteErrorBoundary } from '../components/common/RouteErrorBoundary';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         index: true,

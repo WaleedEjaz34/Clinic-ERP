@@ -20,6 +20,7 @@ import {
   ChevronRight,
   TrendingUp,
   History,
+  ArrowRight,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
