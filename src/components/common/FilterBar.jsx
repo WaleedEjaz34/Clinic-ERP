@@ -12,7 +12,7 @@ export const FilterBar = ({
   totalResults,
 }) => {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 mb-4 sm:mb-6 shadow-card flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-3.5">
+    <div className="relative z-10 bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 mb-4 sm:mb-6 shadow-card flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-3.5">
       {/* Search Bar & Custom Select Filters */}
       <div className="flex flex-1 flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5">
         <div className="w-full sm:w-auto min-w-0 sm:min-w-[220px] max-w-sm flex-1">

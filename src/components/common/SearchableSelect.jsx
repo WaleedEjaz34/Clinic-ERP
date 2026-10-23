@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useId } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, ChevronDown, Check, X, Plus } from 'lucide-react';
 
 /**
@@ -116,11 +117,20 @@ export const SearchableSelect = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [dropdownPlacement, setDropdownPlacement] = useState('bottom');
+  const [menuCoords, setMenuCoords] = useState({
+    top: undefined,
+    bottom: undefined,
+    left: 0,
+    width: 200,
+    maxHeight: 320,
+    placement: 'bottom',
+  });
 
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
   const searchInputRef = useRef(null);
   const listRef = useRef(null);
+  const menuRef = useRef(null);
 
   // Normalize options from propOptions or children
   const normalizedOptions = useMemo(() => {
@@ -179,30 +189,120 @@ export const SearchableSelect = ({
     return !exactMatch;
   }, [allowCustom, searchQuery, normalizedOptions]);
 
-  // Detect position flip on open
-  useEffect(() => {
-    if (!isOpen || !triggerRef.current) return;
+  // Compute collision-aware viewport coordinates for the floating dropdown portal
+  const computePosition = () => {
+    if (!triggerRef.current) return;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    if (triggerRect.width === 0 && triggerRect.height === 0) return;
 
+    // Auto-close if trigger is completely outside visible viewport
+    if (triggerRect.bottom < 0 || triggerRect.top > window.innerHeight) {
+      setIsOpen(false);
+      return;
+    }
+
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    // Detect sticky header clearance (top buffer to prevent covering navbar)
+    const headerEl = document.querySelector('header');
+    const headerBottom = headerEl ? Math.max(0, headerEl.getBoundingClientRect().bottom) : 0;
+    const topLimit = headerBottom + 6;
+
+    // Detect mobile bottom nav clearance (only when visible on mobile/tablet screens)
+    const mobileNav = document.querySelector('nav.fixed.bottom-0');
+    let mobileNavTop = windowHeight;
+    if (mobileNav) {
+      const rect = mobileNav.getBoundingClientRect();
+      if (rect.height > 0 && rect.top > 0) {
+        mobileNavTop = rect.top;
+      }
+    }
+    const bottomLimit = Math.min(windowHeight, mobileNavTop) - 6;
+
+    // Calculate available screen space above and below the trigger
+    const spaceBelow = Math.max(0, bottomLimit - triggerRect.bottom - 4);
+    const spaceAbove = Math.max(0, triggerRect.top - topLimit - 4);
+
+    // Decide direction: 'bottom' (downward) vs 'top' (upward)
+    let chosenDirection = 'bottom';
     if (placement === 'top') {
-      setDropdownPlacement('top');
-      return;
-    }
-    if (placement === 'bottom') {
-      setDropdownPlacement('bottom');
-      return;
-    }
-
-    // Auto placement: check bounding rect
-    const rect = triggerRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const requiredSpace = 260; // Estimated dropdown height
-
-    if (spaceBelow < requiredSpace && spaceAbove > spaceBelow) {
-      setDropdownPlacement('top');
+      chosenDirection = 'top';
+    } else if (placement === 'bottom') {
+      chosenDirection = 'bottom';
     } else {
-      setDropdownPlacement('bottom');
+      // Auto placement logic:
+      // If there is comfortable space below (>= 220px), open downwards by default
+      if (spaceBelow >= 220) {
+        chosenDirection = 'bottom';
+      } else if (spaceAbove > spaceBelow && spaceAbove >= 150) {
+        // More room above and at least 150px
+        chosenDirection = 'top';
+      } else {
+        // Fall back to whichever side has more room
+        chosenDirection = spaceBelow >= spaceAbove ? 'bottom' : 'top';
+      }
     }
+
+    // Determine maxHeight clamped to available space so it never clips or overlaps
+    const availableHeight = chosenDirection === 'top' ? spaceAbove : spaceBelow;
+    const maxHeight = Math.min(340, Math.max(130, availableHeight));
+
+    // Target width: at least trigger width, min 180px, max windowWidth - 20px
+    const defaultMinWidth = menuClassName && menuClassName.includes('min-w-[90px]') ? 100 : 180;
+    const targetWidth = Math.min(Math.max(triggerRect.width, defaultMinWidth), windowWidth - 20);
+
+    // Horizontal position (left) with edge clamping
+    let left = triggerRect.left;
+    if (left + targetWidth > windowWidth - 10) {
+      left = triggerRect.right - targetWidth;
+    }
+    if (left + targetWidth > windowWidth - 10) {
+      left = windowWidth - targetWidth - 10;
+    }
+    if (left < 10) {
+      left = 10;
+    }
+
+    // Vertical position (top / bottom)
+    let top;
+    let bottom;
+    if (chosenDirection === 'bottom') {
+      top = triggerRect.bottom + 4;
+      bottom = undefined;
+    } else {
+      top = undefined;
+      bottom = windowHeight - triggerRect.top + 4;
+    }
+
+    setMenuCoords({
+      top,
+      bottom,
+      left,
+      width: targetWidth,
+      maxHeight,
+      placement: chosenDirection,
+    });
+    setDropdownPlacement(chosenDirection);
+  };
+
+  // Re-compute positioning on open, scroll (including parent containers), and window resize
+  useEffect(() => {
+    if (!isOpen) return;
+
+    computePosition();
+
+    const handleUpdate = () => {
+      computePosition();
+    };
+
+    window.addEventListener('resize', handleUpdate);
+    document.addEventListener('scroll', handleUpdate, true);
+
+    return () => {
+      window.removeEventListener('resize', handleUpdate);
+      document.removeEventListener('scroll', handleUpdate, true);
+    };
   }, [isOpen, placement]);
 
   // Auto-focus search input when opened
@@ -237,10 +337,15 @@ export const SearchableSelect = ({
     }
   }, [highlightedIndex, isOpen]);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click (checks both trigger container and portal menu)
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target) &&
+        menuRef.current &&
+        !menuRef.current.contains(e.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -425,18 +530,24 @@ export const SearchableSelect = ({
         </div>
       </button>
 
-      {/* Dropdown Popover */}
-      {isOpen && (
+      {/* Dropdown Popover via Portal */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
         <div
+          ref={menuRef}
           id={listboxId}
           role="listbox"
           aria-labelledby={`${selectId}-button`}
-          className={`absolute z-50 w-full min-w-[200px] bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 text-xs text-slate-800 animate-in fade-in zoom-in-95 duration-150 flex flex-col ${
-            dropdownPlacement === 'top'
-              ? 'bottom-full mb-1.5'
-              : 'top-full mt-1.5'
-          } ${menuClassName}`}
-          style={{ maxHeight: '340px' }}
+          onKeyDown={handleKeyDown}
+          className={`bg-white rounded-xl shadow-2xl border border-slate-200/90 py-1.5 text-xs text-slate-800 animate-in fade-in zoom-in-95 duration-150 flex flex-col ${menuClassName}`}
+          style={{
+            position: 'fixed',
+            top: menuCoords.top !== undefined ? `${menuCoords.top}px` : undefined,
+            bottom: menuCoords.bottom !== undefined ? `${menuCoords.bottom}px` : undefined,
+            left: `${menuCoords.left}px`,
+            width: `${menuCoords.width}px`,
+            maxHeight: `${menuCoords.maxHeight}px`,
+            zIndex: 99999,
+          }}
         >
           {/* Integrated Search Box */}
           <div className="px-2.5 pt-1 pb-2 border-b border-slate-100 flex-shrink-0">
@@ -487,7 +598,7 @@ export const SearchableSelect = ({
           {/* Options List */}
           <div
             ref={listRef}
-            className={`overflow-y-auto px-1 py-1 space-y-0.5 overscroll-contain ${maxMenuHeight}`}
+            className="flex-1 min-h-0 overflow-y-auto px-1 py-1 space-y-0.5 overscroll-contain"
           >
             {filteredOptions.length === 0 && !showCustomOption ? (
               <div className="py-6 px-3 text-center text-slate-400">
@@ -598,7 +709,8 @@ export const SearchableSelect = ({
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
