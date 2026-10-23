@@ -640,3 +640,180 @@ export const generateDailyActivityReportPDF = ({
 
   doc.save(`Daily_Clinic_Summary_${new Date().toISOString().split('T')[0]}.pdf`);
 };
+
+// ==========================================
+// 6. MANAGEMENT FINANCIAL SUMMARY REPORT PDF
+// ==========================================
+export const generateFinancialSummaryReportPDF = (rows, grandTotals, meta = {}) => {
+  const { startDate, endDate, accountName = 'All Accounts' } = meta;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  // Header Banner
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, 210, 36, 'F');
+
+  // Clinic Brand
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text(CLINIC_INFO.name, 14, 12);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(148, 163, 184); // slate-400
+  doc.text(CLINIC_INFO.address, 14, 18);
+  doc.text(`Phone: ${CLINIC_INFO.phone}  |  ${CLINIC_INFO.email}`, 14, 23);
+
+  // Document Title
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(45, 212, 191); // teal-400
+  doc.text('MANAGEMENT FINANCIAL SUMMARY', 210 - 14, 12, { align: 'right' });
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225);
+  doc.text(
+    `Period: ${startDate ? formatDate(startDate, 'dd MMM yyyy') : 'All'} to ${endDate ? formatDate(endDate, 'dd MMM yyyy') : 'All'}`,
+    210 - 14,
+    18,
+    { align: 'right' }
+  );
+  doc.text(`Account: ${accountName}`, 210 - 14, 23, { align: 'right' });
+  doc.text(`Generated: ${formatDate(new Date(), 'dd MMM yyyy, hh:mm a')}`, 210 - 14, 28, { align: 'right' });
+
+  // Executive KPI summary boxes
+  const cardY = 42;
+  const cardWidth = 58;
+  const cardHeight = 18;
+
+  // Box 1: Total Income
+  doc.setFillColor(240, 253, 250); // teal-50
+  doc.setDrawColor(204, 251, 241); // teal-100
+  doc.roundedRect(14, cardY, cardWidth, cardHeight, 2, 2, 'FD');
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(13, 148, 136); // teal-600
+  doc.text('TOTAL INCOME / COLLECTION', 17, cardY + 6);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text(formatCurrency(grandTotals.income || 0), 17, cardY + 14);
+
+  // Box 2: Total Expenses
+  doc.setFillColor(255, 241, 242); // rose-50
+  doc.setDrawColor(255, 228, 230); // rose-100
+  doc.roundedRect(14 + cardWidth + 4, cardY, cardWidth, cardHeight, 2, 2, 'FD');
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(225, 29, 72); // rose-600
+  doc.text('TOTAL EXPENSES', 14 + cardWidth + 7, cardY + 6);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text(formatCurrency(grandTotals.expenses || 0), 14 + cardWidth + 7, cardY + 14);
+
+  // Box 3: Net Income
+  const isNetProfit = (grandTotals.netIncome || 0) >= 0;
+  doc.setFillColor(isNetProfit ? 240 : 255, isNetProfit ? 253 : 241, isNetProfit ? 244 : 242);
+  doc.setDrawColor(isNetProfit ? 187 : 254, isNetProfit ? 247 : 202, isNetProfit ? 208 : 202);
+  doc.roundedRect(14 + (cardWidth + 4) * 2, cardY, cardWidth, cardHeight, 2, 2, 'FD');
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(isNetProfit ? 22 : 225, isNetProfit ? 101 : 29, isNetProfit ? 52 : 72);
+  doc.text('NET INCOME (INCOME - EXPENSES)', 14 + (cardWidth + 4) * 2 + 3, cardY + 6);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(isNetProfit ? 22 : 225, isNetProfit ? 101 : 29, isNetProfit ? 52 : 72);
+  doc.text(`${isNetProfit ? '+' : ''}${formatCurrency(grandTotals.netIncome || 0)}`, 14 + (cardWidth + 4) * 2 + 3, cardY + 14);
+
+  // Table Body
+  const tableHead = [
+    ['Date', 'Total Income / Collection', 'Total Expenses', 'Net Income'],
+  ];
+
+  const tableBody = rows.map((r) => [
+    formatDate(r.date, 'dd MMM yyyy (EEEE)'),
+    formatCurrency(r.income),
+    formatCurrency(r.expenses),
+    `${r.netIncome >= 0 ? '+' : ''}${formatCurrency(r.netIncome)}`,
+  ]);
+
+  const tableFoot = [
+    [
+      `Grand Total (${rows.length} ${rows.length === 1 ? 'Date' : 'Dates'})`,
+      formatCurrency(grandTotals.income || 0),
+      formatCurrency(grandTotals.expenses || 0),
+      `${grandTotals.netIncome >= 0 ? '+' : ''}${formatCurrency(grandTotals.netIncome || 0)}`,
+    ],
+  ];
+
+  autoTable(doc, {
+    startY: cardY + cardHeight + 8,
+    head: tableHead,
+    body: tableBody,
+    foot: tableFoot,
+    theme: 'grid',
+    styles: {
+      fontSize: 9,
+      cellPadding: 3.5,
+      textColor: [30, 41, 59],
+    },
+    headStyles: {
+      fillColor: [15, 23, 42],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    footStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [15, 23, 42],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    columnStyles: {
+      0: { halign: 'left', fontStyle: 'bold', cellWidth: 62 },
+      1: { halign: 'right', fontStyle: 'bold', textColor: [13, 148, 136] },
+      2: { halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] },
+      3: { halign: 'right', fontStyle: 'bold' },
+    },
+    didParseCell: (data) => {
+      if (data.section === 'body' && data.column.index === 3) {
+        const rawRow = rows[data.row.index];
+        if (rawRow && rawRow.netIncome < 0) {
+          data.cell.styles.textColor = [220, 38, 38];
+        } else if (rawRow && rawRow.netIncome > 0) {
+          data.cell.styles.textColor = [16, 185, 129];
+        }
+      }
+      if (data.section === 'foot' && data.column.index === 3) {
+        if (grandTotals.netIncome < 0) {
+          data.cell.styles.textColor = [220, 38, 38];
+        } else {
+          data.cell.styles.textColor = [16, 185, 129];
+        }
+      }
+    },
+  });
+
+  // Footer Signatures
+  const finalY = doc.lastAutoTable?.finalY || 180;
+  if (finalY < 250) {
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.line(14, finalY + 22, 60, finalY + 22);
+    doc.text('Prepared By (Accounts Officer)', 14, finalY + 26);
+
+    doc.line(80, finalY + 22, 130, finalY + 22);
+    doc.text('Verified By (Finance Manager)', 80, finalY + 26);
+
+    doc.line(150, finalY + 22, 196, finalY + 22);
+    doc.text('Approved By (Managing Director)', 150, finalY + 26);
+  }
+
+  doc.save(`Financial_Summary_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+};

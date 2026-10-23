@@ -23,6 +23,7 @@ import {
   X,
   FileSpreadsheet,
   FileCheck,
+  Coins,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -376,6 +377,17 @@ export const DailyActivityReportPage = () => {
         subtitle="One row for each date summarizing patient flow, consultations, prescriptions, total billing, fee collections, outstanding dues, expenses, and net clinic income."
       >
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Switch to Financial Summary */}
+          <button
+            type="button"
+            onClick={() => navigate('/reports/financial-summary')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            title="Switch to Management Financial Performance Report"
+          >
+            <Coins className="w-4 h-4 text-teal-600" />
+            <span>Financial Summary</span>
+          </button>
+
           {/* Print Button */}
           <button
             type="button"

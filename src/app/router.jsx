@@ -17,6 +17,7 @@ import { UsersPage } from '../pages/users/UsersPage';
 import { SettingsPage } from '../pages/settings/SettingsPage';
 import { NotificationsPage } from '../pages/notifications/NotificationsPage';
 import { DailyActivityReportPage } from '../pages/reports/DailyActivityReportPage';
+import { FinancialSummaryReportPage } from '../pages/reports/FinancialSummaryReportPage';
 import { ActivityLogPage } from '../pages/activity/ActivityLogPage';
 import { RouteErrorBoundary } from '../components/common/RouteErrorBoundary';
 
@@ -103,8 +104,20 @@ export const router = createBrowserRouter([
         element: <DailyActivityReportPage />,
       },
       {
+        path: 'reports/financial-summary',
+        element: <FinancialSummaryReportPage />,
+      },
+      {
+        path: 'financial-summary',
+        element: <FinancialSummaryReportPage />,
+      },
+      {
+        path: 'reports/financial',
+        element: <Navigate to="/reports/financial-summary" replace />,
+      },
+      {
         path: 'reports',
-        element: <Navigate to="/reports/daily-summary" replace />,
+        element: <Navigate to="/reports/financial-summary" replace />,
       },
       {
         path: 'activity-log',
