@@ -41,6 +41,11 @@ import {
   Pill,
   FlaskConical,
   AlertTriangle,
+  Globe,
+  PanelsTopLeft,
+  Briefcase,
+  CalendarCheck,
+  Eye,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { SearchableSelect } from '../common/SearchableSelect';
@@ -186,6 +191,34 @@ const MAIN_NAV_ITEMS = [
       { name: 'Activity & Audit Log', path: '/activity-log', icon: History, description: 'Complete chronological history of important actions across all clinic modules' },
     ],
   },
+  {
+    id: 'website-cms',
+    name: 'Website CMS',
+    path: '/website-cms',
+    icon: Globe,
+    subPaths: ['/website-cms', '/website-preview'],
+    summary: 'Public clinic website content management system, homepage builder, medical services, doctors, pages, media, and preview.',
+    subTabs: [
+      { id: 'overview', name: 'Overview', path: '/website-cms', icon: LayoutDashboard },
+      { id: 'settings', name: 'Website Settings', path: '/website-cms/settings', icon: Settings },
+      { id: 'homepage', name: 'Homepage Builder', path: '/website-cms/homepage', icon: PanelsTopLeft },
+      { id: 'pages', name: 'Pages', path: '/website-cms/pages', icon: FileText },
+      { id: 'services', name: 'Services', path: '/website-cms/services', icon: Briefcase },
+      { id: 'doctors', name: 'Doctor Profiles', path: '/website-cms/doctors', icon: Stethoscope },
+      { id: 'contact', name: 'Appointments & Contact', path: '/website-cms/contact', icon: CalendarCheck },
+      { id: 'preview', name: 'Preview Website', path: '/website-preview', icon: Eye },
+    ],
+    subItems: [
+      { name: 'CMS Dashboard', path: '/website-cms', icon: LayoutDashboard, description: 'Overview statistics, quick actions, draft queues, and recent updates' },
+      { name: 'Website Settings', path: '/website-cms/settings', icon: Settings, description: 'Clinic branding, contact email, working hours, and social media links' },
+      { name: 'Homepage Builder', path: '/website-cms/homepage', icon: PanelsTopLeft, description: 'Visual editor for 13 homepage sections with ordering controls' },
+      { name: 'Pages Management', path: '/website-cms/pages', icon: FileText, description: 'Create, edit, duplicate, and publish website pages with block editor' },
+      { name: 'Services Directory', path: '/website-cms/services', icon: Briefcase, description: 'Medical service catalog, consultation tariffs, and homepage visibility' },
+      { name: 'Doctor Public Profiles', path: '/website-cms/doctors', icon: Stethoscope, description: 'Configure public bios, qualifications, and public website display' },
+      { name: 'Appointments & Contact', path: '/website-cms/contact', icon: CalendarCheck, description: 'Booking instructions, clinic map, and interactive contact form' },
+      { name: 'Live Website Preview', path: '/website-preview', icon: Eye, description: 'Interactive public clinic website preview with viewport switchers' },
+    ],
+  },
 ];
 
 const getNotifIcon = (type) => {
@@ -326,6 +359,9 @@ export const Navbar = () => {
     if (p.startsWith('/settings') || p.startsWith('/activity-log') || p.startsWith('/activity')) {
       return MAIN_NAV_ITEMS.find((m) => m.id === 'settings');
     }
+    if (p.startsWith('/website-cms') || p.startsWith('/website-preview')) {
+      return MAIN_NAV_ITEMS.find((m) => m.id === 'website-cms');
+    }
     return MAIN_NAV_ITEMS[0];
   };
 
@@ -415,6 +451,18 @@ export const Navbar = () => {
       if (currentPath.startsWith('/activity-log') || currentPath.startsWith('/activity')) return subTab.id === 'activity';
       const currentTab = params.get('tab') || 'clinic';
       return subTab.id === currentTab;
+    }
+
+    if (modId === 'website-cms') {
+      if (currentPath === '/website-cms') return subTab.id === 'overview';
+      if (currentPath.startsWith('/website-preview')) return subTab.id === 'preview';
+      if (currentPath.startsWith('/website-cms/settings')) return subTab.id === 'settings';
+      if (currentPath.startsWith('/website-cms/homepage')) return subTab.id === 'homepage';
+      if (currentPath.startsWith('/website-cms/pages')) return subTab.id === 'pages';
+      if (currentPath.startsWith('/website-cms/services')) return subTab.id === 'services';
+      if (currentPath.startsWith('/website-cms/doctors')) return subTab.id === 'doctors';
+      if (currentPath.startsWith('/website-cms/contact')) return subTab.id === 'contact';
+      return false;
     }
 
     return false;
