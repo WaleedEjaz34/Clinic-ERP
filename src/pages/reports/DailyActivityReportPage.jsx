@@ -783,9 +783,9 @@ export const DailyActivityReportPage = () => {
             </tbody>
 
             {/* ========================================================= */}
-            {/* GRAND TOTAL ROW AT THE BOTTOM (When multiple dates are selected) */}
+            {/* GRAND TOTAL ROW AT THE BOTTOM */}
             {/* ========================================================= */}
-            {(filteredRows.length > 1 || startDate !== endDate) && filteredRows.length > 0 && (
+            {filteredRows.length > 0 && (
               <tfoot>
                 <tr className="bg-slate-100/90 text-slate-900 font-bold border-t-2 border-slate-300 tracking-tight">
                   {/* Label */}

@@ -185,6 +185,17 @@ export const AccountsPage = () => {
     return ledger.reverse();
   }, [viewingAccount, payments, expenses]);
 
+  // Compute live totals for the ledger modal transactions
+  const ledgerTotals = useMemo(() => {
+    return accountTransactions.reduce(
+      (acc, tx) => ({
+        inflow: acc.inflow + (tx.inflow || 0),
+        outflow: acc.outflow + (tx.outflow || 0),
+      }),
+      { inflow: 0, outflow: 0 }
+    );
+  }, [accountTransactions]);
+
   const columns = [
     {
       key: 'id',
@@ -239,14 +250,20 @@ export const AccountsPage = () => {
       key: 'openingBalance',
       label: 'Opening Balance',
       align: 'right',
+      hasTotal: true,
       render: (val) => <span className="text-slate-500 font-mono text-xs">{formatCurrency(val)}</span>,
+      totalFormatter: (sum) => <span className="font-bold text-slate-700 font-mono text-xs">{formatCurrency(sum)}</span>,
     },
     {
       key: 'currentBalance',
       label: 'Current Balance',
       align: 'right',
+      hasTotal: true,
       render: (val) => (
         <span className="font-bold text-slate-900 font-mono text-sm">{formatCurrency(val)}</span>
+      ),
+      totalFormatter: (sum) => (
+        <span className="font-black text-slate-900 font-mono text-sm">{formatCurrency(sum)}</span>
       ),
     },
     {
@@ -548,12 +565,26 @@ export const AccountsPage = () => {
                         </div>
                       </div>
                     ))}
+
+                    {/* Mobile Ledger Totals Summary */}
+                    <div className="p-3 bg-slate-100/90 border-2 border-slate-300 rounded-xl flex items-center justify-between text-xs font-bold text-slate-800 mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="uppercase text-[10px] font-black text-slate-900">Total</span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold font-mono">
+                          {accountTransactions.length}
+                        </span>
+                      </div>
+                      <div className="text-right flex items-center gap-3">
+                        <span className="text-emerald-700 font-black">+{formatCurrency(ledgerTotals.inflow)}</span>
+                        <span className="text-rose-700 font-black">-{formatCurrency(ledgerTotals.outflow)}</span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Desktop Transactions Table (hidden sm:block) */}
                   <div className="hidden sm:block border border-slate-200 rounded-xl overflow-hidden max-h-80 overflow-y-auto">
                     <table className="w-full text-xs text-left">
-                      <thead className="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px] border-b border-slate-200 sticky top-0">
+                      <thead className="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px] border-b border-slate-200 sticky top-0 z-10 backdrop-blur-xs">
                         <tr>
                           <th className="py-2.5 px-3">Date</th>
                           <th className="py-2.5 px-3">Reference</th>
@@ -581,6 +612,28 @@ export const AccountsPage = () => {
                           </tr>
                         ))}
                       </tbody>
+                      {/* Dynamic Totals Table Footer */}
+                      <tfoot className="bg-slate-100/95 font-bold border-t-2 border-slate-300 sticky bottom-0 text-slate-900 select-none z-10">
+                        <tr>
+                          <td className="py-2.5 px-3 uppercase text-[11px] font-black" colSpan={3}>
+                            <div className="flex items-center gap-2">
+                              <span>Total</span>
+                              <span className="px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold font-mono">
+                                {accountTransactions.length} {accountTransactions.length === 1 ? 'Record' : 'Records'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-black text-emerald-700">
+                            +{formatCurrency(ledgerTotals.inflow)}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-black text-rose-700">
+                            -{formatCurrency(ledgerTotals.outflow)}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-bold text-slate-400">
+                            —
+                          </td>
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
                 </>

@@ -9,6 +9,46 @@ import {
   Loader2,
 } from 'lucide-react';
 import { SearchableSelect } from './SearchableSelect';
+import { formatCurrency } from '../../utils/currency';
+
+/**
+ * Determine if a column represents a numeric/value column where a total is meaningful.
+ * Strictly excludes non-value columns: IDs, Names, Dates, Statuses, Types, Actions, Contacts, etc.
+ */
+export const isValueColumn = (col) => {
+  if (typeof col.hasTotal === 'boolean') {
+    return col.hasTotal;
+  }
+  const key = (col.key || col.accessor || '').toLowerCase();
+  const label = (col.label || col.header || '').toLowerCase();
+
+  // Explicit non-value keys/labels that MUST NEVER be totaled
+  const nonValueTerms = [
+    'id', 'accountid', 'patientid', 'doctorid', 'billnumber', 'receiptnumber',
+    'vouchernumber', 'date', 'time', 'patientname', 'patient', 'doctorname',
+    'doctor', 'accountname', 'account', 'categoryname', 'category', 'type',
+    'status', 'actions', 'action', 'phone', 'email', 'address', 'gender',
+    'age', 'instructions', 'reason', 'notes', 'diagnosis', 'code', 'shortcode',
+    'role', 'avatar', 'visit', 'name', 'schedule', 'password'
+  ];
+
+  if (
+    nonValueTerms.some(
+      (term) => key === term || key.endsWith('id') || key.endsWith('number') || key.endsWith('date') || key.endsWith('name')
+    )
+  ) {
+    return false;
+  }
+
+  // Meaningful numeric value keys/labels
+  const valueTerms = [
+    'totalamount', 'paidamount', 'balancedue', 'amount', 'currentbalance',
+    'openingbalance', 'outstandingbalance', 'inflow', 'outflow', 'revenue',
+    'expense', 'quantity', 'billed', 'collected'
+  ];
+
+  return valueTerms.some((term) => key.includes(term) || label.includes(term));
+};
 
 export const DataTable = ({
   columns,
@@ -19,6 +59,8 @@ export const DataTable = ({
   emptyAction,
   rowsPerPageOptions = [5, 10, 20, 50],
   defaultRowsPerPage = 10,
+  showTotals = true,
+  totalRowLabel = 'Total',
 }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,9 +114,86 @@ export const DataTable = ({
   };
 
   // Find actions column and status column if any
-  const actionColumn = columns.find((c) => (c.key || '').toLowerCase().includes('action') || (c.label || '').toLowerCase().includes('action'));
-  const statusColumn = columns.find((c) => (c.key || '').toLowerCase().includes('status'));
+  const actionColumn = columns.find((c) => {
+    const k = (c.key || c.accessor || '').toLowerCase();
+    const l = (c.label || c.header || '').toLowerCase();
+    return k.includes('action') || l.includes('action');
+  });
+  const statusColumn = columns.find((c) => {
+    const k = (c.key || c.accessor || '').toLowerCase();
+    return k.includes('status');
+  });
   const nonActionColumns = columns.filter((c) => c !== actionColumn);
+
+  // Totals Calculation over ALL currently filtered/searched data
+  const totalsMap = useMemo(() => {
+    if (!showTotals || !data || data.length === 0) return null;
+
+    const valueColumns = columns.filter((col) => isValueColumn(col));
+    if (valueColumns.length === 0) return null;
+
+    const map = {};
+    columns.forEach((col) => {
+      const colKey = col.key || col.accessor;
+      if (!colKey || !isValueColumn(col)) {
+        map[colKey] = null;
+        return;
+      }
+
+      if (typeof col.totalCalculation === 'function') {
+        map[colKey] = col.totalCalculation(data, colKey);
+      } else {
+        const sum = data.reduce((acc, row) => {
+          const raw = row[colKey];
+          const num = typeof raw === 'number' ? raw : parseFloat(raw);
+          return acc + (isNaN(num) ? 0 : num);
+        }, 0);
+        map[colKey] = sum;
+      }
+    });
+
+    return map;
+  }, [columns, data, showTotals]);
+
+  // Render formatted total for a value column
+  const renderTotalValue = (col, totalVal) => {
+    if (totalVal === null || totalVal === undefined) return null;
+
+    if (typeof col.totalFormatter === 'function') {
+      return col.totalFormatter(totalVal, data);
+    }
+    if (typeof col.renderTotal === 'function') {
+      return col.renderTotal(totalVal, data);
+    }
+
+    const colKey = (col.key || col.accessor || '').toLowerCase();
+    const colLabel = (col.label || col.header || '').toLowerCase();
+    const isCurrency =
+      colKey.includes('amount') ||
+      colKey.includes('balance') ||
+      colKey.includes('fee') ||
+      colKey.includes('charges') ||
+      colKey.includes('inflow') ||
+      colKey.includes('outflow') ||
+      colKey.includes('price') ||
+      colKey.includes('cost') ||
+      colKey.includes('revenue') ||
+      colKey.includes('expense') ||
+      colLabel.includes('amount') ||
+      colLabel.includes('balance') ||
+      colLabel.includes('paid') ||
+      colLabel.includes('due') ||
+      colLabel.includes('expense') ||
+      colLabel.includes('revenue');
+
+    if (isCurrency) {
+      return <span className="font-extrabold tabular-nums">{formatCurrency(totalVal)}</span>;
+    }
+
+    return <span className="font-extrabold tabular-nums">{Number(totalVal).toLocaleString('en-US')}</span>;
+  };
+
+  const firstNonValueColIndex = columns.findIndex((col) => !isValueColumn(col));
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden">
@@ -113,15 +232,17 @@ export const DataTable = ({
           {/* ================= MOBILE CARDS VIEW (Strictly md:hidden) ================= */}
           <div className="md:hidden p-2.5 sm:p-3.5 space-y-2.5 bg-slate-50/60">
             {paginatedData.map((row, rowIndex) => {
-              // Extract status render if exists
+              const statusColKey = statusColumn ? (statusColumn.key || statusColumn.accessor) : null;
               const statusRender = statusColumn
                 ? statusColumn.render
-                  ? statusColumn.render(row[statusColumn.key], row, rowIndex)
-                  : row[statusColumn.key]
+                  ? statusColumn.render(row[statusColKey], row, rowIndex)
+                  : row[statusColKey]
                 : null;
 
               // Remaining detail columns excluding primary (idx 0), secondary (idx 1), and status
               const detailColumns = nonActionColumns.slice(1).filter((c) => c !== statusColumn);
+              const primaryColKey = nonActionColumns[0] ? (nonActionColumns[0].key || nonActionColumns[0].accessor) : null;
+              const secondaryColKey = nonActionColumns[1] ? (nonActionColumns[1].key || nonActionColumns[1].accessor) : null;
 
               return (
                 <div
@@ -134,15 +255,15 @@ export const DataTable = ({
                       {nonActionColumns[0] && (
                         <div className="text-sm font-bold text-slate-900 leading-snug break-words">
                           {nonActionColumns[0].render
-                            ? nonActionColumns[0].render(row[nonActionColumns[0].key], row, rowIndex)
-                            : row[nonActionColumns[0].key]}
+                            ? nonActionColumns[0].render(row[primaryColKey], row, rowIndex)
+                            : row[primaryColKey]}
                         </div>
                       )}
                       {nonActionColumns[1] && nonActionColumns[1] !== statusColumn && (
                         <div className="mt-0.5 text-xs text-slate-500 font-medium break-words">
                           {nonActionColumns[1].render
-                            ? nonActionColumns[1].render(row[nonActionColumns[1].key], row, rowIndex)
-                            : row[nonActionColumns[1].key]}
+                            ? nonActionColumns[1].render(row[secondaryColKey], row, rowIndex)
+                            : row[secondaryColKey]}
                         </div>
                       )}
                     </div>
@@ -156,28 +277,67 @@ export const DataTable = ({
                   {/* Card Body: 2-Column Clean Key-Value Grid */}
                   {detailColumns.length > 0 && (
                     <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                      {detailColumns.map((col, idx) => (
-                        <div key={col.key || idx} className="space-y-0.5 min-w-0">
-                          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block truncate">
-                            {col.label}
-                          </span>
-                          <div className="text-slate-800 font-semibold break-words leading-tight">
-                            {col.render ? col.render(row[col.key], row, rowIndex) : (row[col.key] || '—')}
+                      {detailColumns.map((col, idx) => {
+                        const colKey = col.key || col.accessor;
+                        return (
+                          <div key={colKey || idx} className="space-y-0.5 min-w-0">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block truncate">
+                              {col.label || col.header}
+                            </span>
+                            <div className="text-slate-800 font-semibold break-words leading-tight">
+                              {col.render ? col.render(row[colKey], row, rowIndex) : (row[colKey] || '—')}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
                   {/* Card Actions: Full-width touch-friendly actions */}
                   {actionColumn && (
                     <div className="pt-2.5 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
-                      {actionColumn.render ? actionColumn.render(row[actionColumn.key], row, rowIndex) : row[actionColumn.key]}
+                      {actionColumn.render
+                        ? actionColumn.render(row[actionColumn.key || actionColumn.accessor], row, rowIndex)
+                        : row[actionColumn.key || actionColumn.accessor]}
                     </div>
                   )}
                 </div>
               );
             })}
+
+            {/* Mobile Dynamic Totals Summary Card */}
+            {totalsMap && (
+              <div className="bg-slate-100/90 border-2 border-slate-300/90 rounded-2xl p-4 shadow-sm space-y-3 mt-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-xs uppercase tracking-wider text-slate-900">
+                      Totals Summary
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold font-mono">
+                      {totalRecords} {totalRecords === 1 ? 'Record' : 'Records'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-medium">Filtered Dataset</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  {columns.filter(isValueColumn).map((col) => {
+                    const colKey = col.key || col.accessor;
+                    const totalVal = totalsMap[colKey];
+                    return (
+                      <div key={colKey} className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs space-y-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block truncate">
+                          {col.label || col.header} Total
+                        </span>
+                        <div className="text-sm font-extrabold text-slate-900">
+                          {renderTotalValue(col, totalVal)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ================= DESKTOP TABLE VIEW (Strictly hidden md:block) ================= */}
@@ -185,37 +345,40 @@ export const DataTable = ({
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/95 border-b border-slate-200 text-slate-600 uppercase font-bold tracking-wider text-[11px] select-none sticky top-0 z-10 backdrop-blur-xs">
-                  {columns.map((col, idx) => (
-                    <th
-                      key={col.key || idx}
-                      className={`py-3.5 px-4 ${
-                        col.sortable !== false ? 'cursor-pointer hover:bg-slate-100/90 transition-colors' : ''
-                      } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
-                      style={{ width: col.width }}
-                      onClick={() => handleSort(col.key, col.sortable !== false)}
-                    >
-                      <div
-                        className={`inline-flex items-center gap-1.5 ${
-                          col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'
-                        }`}
+                  {columns.map((col, idx) => {
+                    const colKey = col.key || col.accessor;
+                    return (
+                      <th
+                        key={colKey || idx}
+                        className={`py-3.5 px-4 ${
+                          col.sortable !== false ? 'cursor-pointer hover:bg-slate-100/90 transition-colors' : ''
+                        } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
+                        style={{ width: col.width }}
+                        onClick={() => handleSort(colKey, col.sortable !== false)}
                       >
-                        <span>{col.label}</span>
-                        {col.sortable !== false && (
-                          <span className="text-slate-400">
-                            {sortConfig.key === col.key ? (
-                              sortConfig.direction === 'asc' ? (
-                                <ChevronUp className="w-3.5 h-3.5 text-brand-600 stroke-[2.5]" />
+                        <div
+                          className={`inline-flex items-center gap-1.5 ${
+                            col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'
+                          }`}
+                        >
+                          <span>{col.label || col.header}</span>
+                          {col.sortable !== false && (
+                            <span className="text-slate-400">
+                              {sortConfig.key === colKey ? (
+                                sortConfig.direction === 'asc' ? (
+                                  <ChevronUp className="w-3.5 h-3.5 text-brand-600 stroke-[2.5]" />
+                                ) : (
+                                  <ChevronDown className="w-3.5 h-3.5 text-brand-600 stroke-[2.5]" />
+                                )
                               ) : (
-                                <ChevronDown className="w-3.5 h-3.5 text-brand-600 stroke-[2.5]" />
-                              )
-                            ) : (
-                              <ChevronsUpDown className="w-3 h-3 text-slate-300" />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                  ))}
+                                <ChevronsUpDown className="w-3 h-3 text-slate-300" />
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
 
@@ -225,23 +388,73 @@ export const DataTable = ({
                     key={row[keyField] || rowIndex}
                     className="hover:bg-brand-50/25 transition-colors group"
                   >
-                    {columns.map((col, colIndex) => (
-                      <td
-                        key={col.key || colIndex}
-                        className={`py-3.5 px-4 ${
-                          col.align === 'right'
-                            ? 'text-right'
-                            : col.align === 'center'
-                            ? 'text-center'
-                            : 'text-left'
-                        }`}
-                      >
-                        {col.render ? col.render(row[col.key], row, rowIndex) : row[col.key]}
-                      </td>
-                    ))}
+                    {columns.map((col, colIndex) => {
+                      const colKey = col.key || col.accessor;
+                      return (
+                        <td
+                          key={colKey || colIndex}
+                          className={`py-3.5 px-4 ${
+                            col.align === 'right'
+                              ? 'text-right'
+                              : col.align === 'center'
+                              ? 'text-center'
+                              : 'text-left'
+                          }`}
+                        >
+                          {col.render ? col.render(row[colKey], row, rowIndex) : row[colKey]}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
+
+              {/* Dynamic Totals Table Footer (Reflects Filtered Records) */}
+              {totalsMap && (
+                <tfoot className="bg-slate-100/95 border-t-2 border-slate-300/90 font-bold text-slate-900 select-none">
+                  <tr>
+                    {columns.map((col, colIndex) => {
+                      const colKey = col.key || col.accessor;
+                      const isVal = isValueColumn(col);
+                      const isPrimaryLabel = colIndex === (firstNonValueColIndex >= 0 ? firstNonValueColIndex : 0);
+
+                      return (
+                        <td
+                          key={colKey || colIndex}
+                          className={`py-3.5 px-4 ${
+                            col.align === 'right'
+                              ? 'text-right'
+                              : col.align === 'center'
+                              ? 'text-center'
+                              : 'text-left'
+                          }`}
+                        >
+                          {isVal ? (
+                            renderTotalValue(col, totalsMap[colKey])
+                          ) : isPrimaryLabel ? (
+                            <div
+                              className={`inline-flex items-center gap-2 ${
+                                col.align === 'right'
+                                  ? 'justify-end'
+                                  : col.align === 'center'
+                                  ? 'justify-center'
+                                  : 'justify-start'
+                              }`}
+                            >
+                              <span className="font-black uppercase tracking-wider text-xs text-slate-900">
+                                {totalRowLabel}
+                              </span>
+                              <span className="px-1.5 py-0.5 rounded-md bg-slate-200/90 text-slate-700 text-[10px] font-bold font-mono">
+                                {totalRecords} {totalRecords === 1 ? 'Record' : 'Records'}
+                              </span>
+                            </div>
+                          ) : null}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
         </>

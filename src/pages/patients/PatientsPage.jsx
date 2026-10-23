@@ -309,6 +309,7 @@ export const PatientsPage = () => {
       key: 'outstandingBalance',
       label: 'Balance Due',
       align: 'right',
+      hasTotal: true,
       render: (val) => (
         <span
           className={`font-bold tabular-nums ${
@@ -316,6 +317,15 @@ export const PatientsPage = () => {
           }`}
         >
           {formatCurrency(val)}
+        </span>
+      ),
+      totalFormatter: (sum) => (
+        <span
+          className={`font-black tabular-nums text-xs sm:text-sm ${
+            sum > 0 ? 'text-rose-600' : 'text-emerald-700'
+          }`}
+        >
+          {formatCurrency(sum)}
         </span>
       ),
     },

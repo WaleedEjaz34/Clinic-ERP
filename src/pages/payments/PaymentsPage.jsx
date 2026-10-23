@@ -229,8 +229,12 @@ export const PaymentsPage = () => {
       key: 'amount',
       label: 'Amount Paid',
       align: 'right',
+      hasTotal: true,
       render: (val) => (
         <span className="font-bold text-emerald-600 font-mono text-sm">{formatCurrency(val)}</span>
+      ),
+      totalFormatter: (sum) => (
+        <span className="font-black text-emerald-700 font-mono text-sm">{formatCurrency(sum)}</span>
       ),
     },
     {

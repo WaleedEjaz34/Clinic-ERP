@@ -203,23 +203,35 @@ export const BillsPage = () => {
       key: 'totalAmount',
       label: 'Total Amount',
       align: 'right',
+      hasTotal: true,
       render: (val) => <span className="font-bold text-slate-900 tabular-nums">{formatCurrency(val)}</span>,
+      totalFormatter: (sum) => <span className="font-black text-slate-900 tabular-nums text-xs sm:text-sm">{formatCurrency(sum)}</span>,
     },
     {
       key: 'paidAmount',
       label: 'Paid Amount',
       align: 'right',
+      hasTotal: true,
       render: (val) => (
         <span className="font-bold text-emerald-700 tabular-nums">{formatCurrency(val)}</span>
+      ),
+      totalFormatter: (sum) => (
+        <span className="font-black text-emerald-700 tabular-nums text-xs sm:text-sm">{formatCurrency(sum)}</span>
       ),
     },
     {
       key: 'balanceDue',
       label: 'Balance Due',
       align: 'right',
+      hasTotal: true,
       render: (val) => (
         <span className={`font-bold tabular-nums ${val > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
           {formatCurrency(val)}
+        </span>
+      ),
+      totalFormatter: (sum) => (
+        <span className={`font-black tabular-nums text-xs sm:text-sm ${sum > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+          {formatCurrency(sum)}
         </span>
       ),
     },
