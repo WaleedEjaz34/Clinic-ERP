@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Landmark,
   Plus,
@@ -15,6 +15,7 @@ import {
   Receipt,
   TrendingDown,
   DollarSign,
+  Layers,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -36,6 +37,7 @@ export const AccountsPage = () => {
     expenses,
   } = useClinic();
 
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Search & Filter state
@@ -295,15 +297,24 @@ export const AccountsPage = () => {
       <PageHeader
         title="Cash & Bank Accounts"
         subtitle="Manage physical cash drawers, digital collection merchant accounts, and bank operational balances."
-        breadcrumbs={[{ label: 'Accounts' }]}
+        breadcrumbs={[{ label: 'Finance', path: '/bills' }, { label: 'Setup' }, { label: 'Cash & Bank Accounts' }]}
         actions={
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-clinical-navy hover:shadow-glow transition-all active:scale-[0.98]"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Add Account</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/chart-of-accounts')}
+              className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs"
+            >
+              <Layers className="w-4 h-4 text-purple-600" />
+              <span>Chart of Accounts</span>
+            </button>
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-clinical-navy hover:shadow-glow transition-all active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Add Account</span>
+            </button>
+          </div>
         }
       />
 

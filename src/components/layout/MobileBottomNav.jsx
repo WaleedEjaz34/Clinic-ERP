@@ -452,10 +452,10 @@ export const MobileBottomNav = () => {
                 </div>
               </div>
 
-              {/* Accounts & Ledger */}
+              {/* Finance Setup (COA & Cash/Bank Accounts) */}
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1 mb-1.5">
-                  General Accounts & Ledgers
+                  Finance Setup
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   <button

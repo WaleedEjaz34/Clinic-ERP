@@ -38,8 +38,8 @@ const MODULES = [
   { key: 'bills', label: 'Patient Bills & Invoicing' },
   { key: 'payments', label: 'Payment Collection' },
   { key: 'expenses', label: 'Expense Management' },
-  { key: 'accounts', label: 'Cash & Bank Accounts' },
-  { key: 'coa', label: 'Chart of Accounts' },
+  { key: 'coa', label: 'Finance: Chart of Accounts (COA)' },
+  { key: 'accounts', label: 'Finance: Cash & Bank Accounts' },
   { key: 'users', label: 'User Management & Roles' },
 ];
 

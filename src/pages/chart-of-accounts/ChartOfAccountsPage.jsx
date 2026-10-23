@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Layers,
   Plus,
@@ -11,6 +12,7 @@ import {
   TrendingDown,
   Tag,
   Check,
+  Landmark,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -21,6 +23,7 @@ import { Modal } from '../../components/common/Modal';
 import { SearchableSelect } from '../../components/common/SearchableSelect';
 
 export const ChartOfAccountsPage = () => {
+  const navigate = useNavigate();
   const { categories, addCategory, updateCategory, toggleCategoryStatus } = useClinic();
 
   // Search & Filter state
@@ -170,15 +173,24 @@ export const ChartOfAccountsPage = () => {
       <PageHeader
         title="Chart of Accounts (COA)"
         subtitle="Manage standardized revenue and expenditure classification categories for clinic financial reporting."
-        breadcrumbs={[{ label: 'Chart of Accounts' }]}
+        breadcrumbs={[{ label: 'Finance', path: '/bills' }, { label: 'Setup' }, { label: 'Chart of Accounts (COA)' }]}
         actions={
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-clinical-navy hover:shadow-glow transition-all active:scale-[0.98]"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Add Category</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/accounts')}
+              className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs"
+            >
+              <Landmark className="w-4 h-4 text-blue-600" />
+              <span>Cash & Bank Accounts</span>
+            </button>
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-clinical-navy hover:shadow-glow transition-all active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Add Category</span>
+            </button>
+          </div>
         }
       />
 

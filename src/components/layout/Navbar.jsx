@@ -107,39 +107,31 @@ const MAIN_NAV_ITEMS = [
     name: 'Finance',
     path: '/bills',
     icon: Receipt,
-    subPaths: ['/bills', '/payments', '/expenses'],
-    summary: 'Patient billing, fee collections, operational expenses, and financial summaries.',
+    subPaths: ['/bills', '/payments', '/expenses', '/accounts', '/chart-of-accounts'],
+    summary: 'Patient billing, fee collections, operational expenses, chart of accounts, and cash/bank setups.',
     subTabs: [
       { id: 'bills', name: 'Patient Bills', path: '/bills', icon: Receipt },
       { id: 'payments', name: 'Payment Collection', path: '/payments', icon: CreditCard },
       { id: 'expenses', name: 'Expenses', path: '/expenses', icon: TrendingDown },
       { id: 'summary', name: 'Income & Expense Summary', path: '/bills?tab=summary', icon: Coins },
+      {
+        id: 'setup',
+        name: 'Setup',
+        icon: Sliders,
+        isDropdown: true,
+        items: [
+          { id: 'coa', name: 'Chart of Accounts (COA)', path: '/chart-of-accounts', icon: Layers, description: 'Revenue & expense categories' },
+          { id: 'accounts', name: 'Cash & Bank Accounts', path: '/accounts', icon: Landmark, description: 'Cash drawers, bank accounts & ledgers' },
+        ],
+      },
     ],
     subItems: [
       { name: 'Patient Bills', path: '/bills', icon: Receipt, description: 'Itemized consultation charges, procedures, and dues' },
       { name: 'Payment Collection', path: '/payments', icon: CreditCard, description: 'Collect patient dues, receipts, and deposit history' },
       { name: 'Expenses', path: '/expenses', icon: TrendingDown, description: 'Disbursements, clinic operating costs, and vouchers' },
       { name: 'Income & Expense Summary', path: '/bills?tab=summary', icon: Coins, description: 'Financial income vs expense summary and P&L tracker' },
-    ],
-  },
-  {
-    id: 'accounts',
-    name: 'Accounts',
-    path: '/accounts',
-    icon: Landmark,
-    subPaths: ['/accounts', '/chart-of-accounts'],
-    summary: 'Chart of accounts, cash drawers, bank accounts, and transaction ledgers.',
-    subTabs: [
-      { id: 'coa', name: 'Chart of Accounts', path: '/chart-of-accounts', icon: Layers },
-      { id: 'cash', name: 'Cash Accounts', path: '/accounts?type=Cash', icon: Landmark },
-      { id: 'bank', name: 'Bank Accounts', path: '/accounts?type=Bank', icon: CreditCard },
-      { id: 'ledgers', name: 'Account Transactions & Ledgers', path: '/accounts?tab=ledgers', icon: FileText },
-    ],
-    subItems: [
-      { name: 'Chart of Accounts', path: '/chart-of-accounts', icon: Layers, description: 'Financial income and expense classification' },
-      { name: 'Cash Accounts', path: '/accounts?type=Cash', icon: Landmark, description: 'Physical cash counters and register balances' },
-      { name: 'Bank Accounts', path: '/accounts?type=Bank', icon: CreditCard, description: 'Commercial clinic bank accounts and statements' },
-      { name: 'Account Transactions & Ledgers', path: '/accounts?tab=ledgers', icon: FileText, description: 'Ledger journal entries and audit trails' },
+      { name: 'Chart of Accounts (COA)', path: '/chart-of-accounts', icon: Layers, description: 'Setup: Revenue & expense category classification' },
+      { name: 'Cash & Bank Accounts', path: '/accounts', icon: Landmark, description: 'Setup: Cash counters, commercial bank accounts & ledgers' },
     ],
   },
   {
@@ -240,11 +232,12 @@ export const Navbar = () => {
   const searchInputRef = useRef(null);
   const mobileSearchInputRef = useRef(null);
 
-  // Dropdown states
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [setupSubMenuOpen, setSetupSubMenuOpen] = useState(false);
+  const setupSubMenuRef = useRef(null);
   const [activeDropdownId, setActiveDropdownId] = useState(null);
   const [expandedMobileSections, setExpandedMobileSections] = useState({});
   const dropdownTimeoutRef = useRef(null);
@@ -289,11 +282,14 @@ export const Navbar = () => {
     if (p.startsWith('/patients')) return MAIN_NAV_ITEMS.find((m) => m.id === 'patients');
     if (p.startsWith('/appointments')) return MAIN_NAV_ITEMS.find((m) => m.id === 'appointments');
     if (p.startsWith('/prescriptions')) return MAIN_NAV_ITEMS.find((m) => m.id === 'prescriptions');
-    if (p.startsWith('/bills') || p.startsWith('/payments') || p.startsWith('/expenses')) {
+    if (
+      p.startsWith('/bills') ||
+      p.startsWith('/payments') ||
+      p.startsWith('/expenses') ||
+      p.startsWith('/accounts') ||
+      p.startsWith('/chart-of-accounts')
+    ) {
       return MAIN_NAV_ITEMS.find((m) => m.id === 'finance');
-    }
-    if (p.startsWith('/accounts') || p.startsWith('/chart-of-accounts')) {
-      return MAIN_NAV_ITEMS.find((m) => m.id === 'accounts');
     }
     if (p.startsWith('/doctors')) {
       if (params.get('from') === 'appointments') {
@@ -340,16 +336,11 @@ export const Navbar = () => {
       }
       if (currentPath.startsWith('/payments') && subTab.id === 'payments') return true;
       if (currentPath.startsWith('/expenses') && subTab.id === 'expenses') return true;
-      return false;
-    }
-
-    if (modId === 'accounts') {
-      if (currentPath.startsWith('/chart-of-accounts') && subTab.id === 'coa') return true;
-      if (currentPath.startsWith('/accounts')) {
-        if (params.get('type') === 'Cash' && subTab.id === 'cash') return true;
-        if (params.get('type') === 'Bank' && subTab.id === 'bank') return true;
-        if (params.get('tab') === 'ledgers' && subTab.id === 'ledgers') return true;
-        if (!params.get('type') && !params.get('tab') && subTab.id === 'cash') return true;
+      if (
+        (currentPath.startsWith('/chart-of-accounts') || currentPath.startsWith('/accounts')) &&
+        subTab.id === 'setup'
+      ) {
+        return true;
       }
       return false;
     }
@@ -435,6 +426,9 @@ export const Navbar = () => {
       if (notifRef.current && !notifRef.current.contains(e.target)) {
         setShowNotifMenu(false);
       }
+      if (setupSubMenuRef.current && !setupSubMenuRef.current.contains(e.target)) {
+        setSetupSubMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
@@ -446,6 +440,7 @@ export const Navbar = () => {
     setShowNotifMenu(false);
     setShowQuickMenu(false);
     setShowProfileMenu(false);
+    setSetupSubMenuOpen(false);
     setIsSearchOpen(false);
     setMobileOpen(false);
   }, [location.pathname]);
@@ -1031,8 +1026,8 @@ export const Navbar = () => {
         </div>
       )}
 
-      {/* ================= REVISED HORIZONTAL MAIN MENU (8 ITEMS) ================= */}
-      {/* Horizontal Main Menu: Dashboard | Patients | Appointments | Prescriptions | Finance | Accounts | Users | Settings */}
+      {/* ================= REVISED HORIZONTAL MAIN MENU (7 ITEMS) ================= */}
+      {/* Horizontal Main Menu: Dashboard | Patients | Appointments | Prescriptions | Finance | Users | Settings */}
       <nav className="hidden md:block border-t border-slate-200/90 bg-slate-50/90 backdrop-blur-xs shadow-2xs relative z-40">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 py-1.5 overflow-x-auto no-scrollbar">
@@ -1145,14 +1140,101 @@ export const Navbar = () => {
       {/* ================= TIER 2: PERSISTENT SUB-TAB BAR ================= */}
       {/* Dedicated visible Sub-Tabs Bar for active module */}
       {activeModule && activeModule.subTabs && (
-        <div className="w-full bg-white border-t border-b border-slate-200/90 shadow-2xs z-30">
+        <div className="w-full bg-white border-t border-b border-slate-200/90 shadow-2xs relative z-30">
           <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between gap-3 py-1.5 overflow-x-auto no-scrollbar">
+            <div className="flex items-center justify-between gap-3 py-1.5 overflow-x-auto md:overflow-visible no-scrollbar">
               {/* Left: Horizontal Sub-Tabs (No duplicate module name label) */}
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-max">
                 {activeModule.subTabs.map((subTab) => {
                   const isTabActive = checkIsSubTabActive(activeModule.id, subTab);
                   const SubIcon = subTab.icon;
+
+                  if (subTab.isDropdown) {
+                    return (
+                      <div
+                        key={subTab.id}
+                        ref={setupSubMenuRef}
+                        className="relative"
+                        onMouseEnter={() => setSetupSubMenuOpen(true)}
+                        onMouseLeave={() => setSetupSubMenuOpen(false)}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setSetupSubMenuOpen((prev) => !prev)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all duration-150 cursor-pointer select-none ${
+                            isTabActive
+                              ? 'bg-brand-600 text-white font-bold shadow-xs'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium border border-transparent'
+                          }`}
+                        >
+                          {SubIcon && (
+                            <SubIcon
+                              className={`w-3.5 h-3.5 flex-shrink-0 ${
+                                isTabActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'
+                              }`}
+                            />
+                          )}
+                          <span>{subTab.name}</span>
+                          <ChevronDown
+                            className={`w-3 h-3 transition-transform duration-150 ${
+                              setupSubMenuOpen ? 'rotate-180' : ''
+                            } ${isTabActive ? 'text-white' : 'text-slate-400'}`}
+                          />
+                        </button>
+
+                        {setupSubMenuOpen && (
+                          <div
+                            className="absolute left-0 mt-1.5 w-64 bg-white rounded-xl border border-slate-200 shadow-modal py-1.5 z-50 animate-in fade-in zoom-in-95"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1 mb-1">
+                              Finance Setup
+                            </div>
+                            {subTab.items.map((item) => {
+                              const ItemIcon = item.icon;
+                              const isItemActive = location.pathname.startsWith(item.path);
+                              return (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => {
+                                    navigate(item.path);
+                                    setSetupSubMenuOpen(false);
+                                  }}
+                                  className={`w-full text-left p-2 rounded-lg flex items-start gap-2.5 hover:bg-slate-50 transition-colors cursor-pointer ${
+                                    isItemActive
+                                      ? 'bg-brand-50/80 text-brand-700 font-semibold border border-brand-200/60'
+                                      : 'text-slate-700 border border-transparent'
+                                  }`}
+                                >
+                                  <div
+                                    className={`p-1 rounded-md mt-0.5 ${
+                                      isItemActive ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500'
+                                    }`}
+                                  >
+                                    <ItemIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="block text-xs font-semibold">{item.name}</span>
+                                      {isItemActive && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-brand-600 flex-shrink-0 ml-1.5" />
+                                      )}
+                                    </div>
+                                    {item.description && (
+                                      <span className="block text-[10px] text-slate-400 font-normal leading-tight mt-0.5">
+                                        {item.description}
+                                      </span>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
 
                   return (
                     <button
