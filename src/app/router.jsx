@@ -16,6 +16,7 @@ import { ChartOfAccountsPage } from '../pages/chart-of-accounts/ChartOfAccountsP
 import { UsersPage } from '../pages/users/UsersPage';
 import { SettingsPage } from '../pages/settings/SettingsPage';
 import { NotificationsPage } from '../pages/notifications/NotificationsPage';
+import { DailyActivityReportPage } from '../pages/reports/DailyActivityReportPage';
 
 export const router = createBrowserRouter([
   {
@@ -89,6 +90,18 @@ export const router = createBrowserRouter([
       {
         path: 'notifications',
         element: <NotificationsPage />,
+      },
+      {
+        path: 'reports/daily-summary',
+        element: <DailyActivityReportPage />,
+      },
+      {
+        path: 'daily-summary',
+        element: <DailyActivityReportPage />,
+      },
+      {
+        path: 'reports',
+        element: <Navigate to="/reports/daily-summary" replace />,
       },
       {
         path: '*',

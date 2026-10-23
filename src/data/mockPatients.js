@@ -1,3 +1,5 @@
+const todayStr = new Date().toISOString().split('T')[0];
+
 export const initialPatients = [
   {
     id: 'PAT-1001',
@@ -88,5 +90,20 @@ export const initialPatients = [
     status: 'Inactive',
     notes: 'Relocated temporarily; accounts settled.',
     outstandingBalance: 0,
-  }
+  },
+  {
+    id: 'PAT-1007',
+    name: 'Tariq Javed',
+    phone: '+92 333 5566778',
+    dob: '1989-12-04',
+    age: 36,
+    gender: 'Male',
+    address: 'House 12, Street 3, G-9/2, Islamabad',
+    emergencyContact: '+92 331 4455667 (Spouse - Anam)',
+    registrationDate: todayStr,
+    bloodGroup: 'O+',
+    status: 'Active',
+    notes: 'Walk-in new registration for acute viral consultation.',
+    outstandingBalance: 0,
+  },
 ];

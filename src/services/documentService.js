@@ -475,3 +475,168 @@ export const generateExpenseVoucherPDF = (expense) => {
 
   doc.save(`Voucher_${expense.reference || expense.id}.pdf`);
 };
+
+// ==========================================
+// 5. DAILY CLINIC ACTIVITY REPORT PDF GENERATOR
+// ==========================================
+export const generateDailyActivityReportPDF = ({
+  rows = [],
+  grandTotals = {},
+  dateRangeLabel = 'Today',
+  clinicInfo = CLINIC_INFO,
+}) => {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // Clinic Header Banner
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, 297, 26, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text(clinicInfo.name, 14, 10);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225); // slate-300
+  doc.text(`${clinicInfo.address} | Phone: ${clinicInfo.phone} | ${clinicInfo.regNo}`, 14, 16);
+  doc.text('CONFIDENTIAL CLINICAL & FINANCIAL EXECUTIVE SUMMARY', 14, 21);
+
+  // Subheader: Report Metadata
+  doc.setFillColor(248, 250, 252); // slate-50
+  doc.rect(14, 29, 269, 14, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(14, 29, 269, 14, 'S');
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DAILY CLINIC ACTIVITY & OPERATIONAL SUMMARY REPORT', 18, 36);
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Active Filter: ${dateRangeLabel}`, 18, 41);
+  doc.text(`Report Period: ${rows.length} ${rows.length === 1 ? 'Date Recorded' : 'Dates Recorded'}`, 150, 36);
+  doc.text(`Generated At: ${formatDate(new Date(), 'dd MMM yyyy, hh:mm a')}`, 150, 41);
+
+  // Table Body
+  const tableHead = [
+    [
+      'Date',
+      'New Patients',
+      'Total Apts',
+      'Completed',
+      'Consultations',
+      'Rx',
+      'Total Billing',
+      'Total Collection',
+      'Outstanding',
+      'Expenses',
+      'Net Income',
+    ],
+  ];
+
+  const tableBody = rows.map((r) => [
+    formatDate(r.date, 'dd MMM yyyy'),
+    r.newPatients,
+    r.totalAppointments,
+    r.completedAppointments,
+    r.consultations,
+    r.prescriptions,
+    formatCurrency(r.totalBilling),
+    formatCurrency(r.totalCollection),
+    formatCurrency(r.outstanding),
+    formatCurrency(r.expenses),
+    formatCurrency(r.netIncome),
+  ]);
+
+  const tableFoot = [
+    [
+      'Grand Total',
+      grandTotals.newPatients || 0,
+      grandTotals.totalAppointments || 0,
+      grandTotals.completedAppointments || 0,
+      grandTotals.consultations || 0,
+      grandTotals.prescriptions || 0,
+      formatCurrency(grandTotals.totalBilling || 0),
+      formatCurrency(grandTotals.totalCollection || 0),
+      formatCurrency(grandTotals.outstanding || 0),
+      formatCurrency(grandTotals.expenses || 0),
+      formatCurrency(grandTotals.netIncome || 0),
+    ],
+  ];
+
+  autoTable(doc, {
+    startY: 46,
+    head: tableHead,
+    body: tableBody,
+    foot: tableFoot,
+    theme: 'grid',
+    styles: {
+      fontSize: 8,
+      cellPadding: 2.2,
+      textColor: [30, 41, 59],
+    },
+    headStyles: {
+      fillColor: [30, 41, 59],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    footStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [15, 23, 42],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    columnStyles: {
+      0: { halign: 'left', fontStyle: 'bold' },
+      1: { halign: 'center' },
+      2: { halign: 'center' },
+      3: { halign: 'center' },
+      4: { halign: 'center' },
+      5: { halign: 'center' },
+      6: { halign: 'right', fontStyle: 'bold' },
+      7: { halign: 'right', fontStyle: 'bold' },
+      8: { halign: 'right', textColor: [180, 83, 9] },
+      9: { halign: 'right' },
+      10: { halign: 'right', fontStyle: 'bold' },
+    },
+    didParseCell: (data) => {
+      // Net Income column coloring in footer
+      if (data.section === 'body' && data.column.index === 10) {
+        const rawRow = rows[data.row.index];
+        if (rawRow && rawRow.netIncome < 0) {
+          data.cell.styles.textColor = [220, 38, 38];
+        } else if (rawRow && rawRow.netIncome > 0) {
+          data.cell.styles.textColor = [16, 185, 129];
+        }
+      }
+      if (data.section === 'foot' && data.column.index === 10) {
+        if (grandTotals.netIncome < 0) {
+          data.cell.styles.textColor = [220, 38, 38];
+        } else {
+          data.cell.styles.textColor = [16, 185, 129];
+        }
+      }
+    },
+  });
+
+  // Footer Signatures
+  const finalY = doc.lastAutoTable?.finalY || 160;
+  if (finalY < 185) {
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.line(18, finalY + 18, 65, finalY + 18);
+    doc.text('Prepared By (Accounts Officer)', 18, finalY + 22);
+
+    doc.line(125, finalY + 18, 175, finalY + 18);
+    doc.text('Verified By (Operations Manager)', 125, finalY + 22);
+
+    doc.line(230, finalY + 18, 280, finalY + 18);
+    doc.text('Approved By (Medical Director)', 230, finalY + 22);
+  }
+
+  doc.save(`Daily_Clinic_Summary_${new Date().toISOString().split('T')[0]}.pdf`);
+};

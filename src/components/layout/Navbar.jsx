@@ -113,12 +113,13 @@ const MAIN_NAV_ITEMS = [
     name: 'Finance',
     path: '/bills',
     icon: Receipt,
-    subPaths: ['/bills', '/payments', '/expenses', '/accounts', '/chart-of-accounts'],
-    summary: 'Patient billing, fee collections, operational expenses, chart of accounts, and cash/bank setups.',
+    subPaths: ['/bills', '/payments', '/expenses', '/accounts', '/chart-of-accounts', '/reports', '/daily-summary'],
+    summary: 'Patient billing, fee collections, operational expenses, daily activity reports, chart of accounts, and cash/bank setups.',
     subTabs: [
       { id: 'bills', name: 'Patient Bills', path: '/bills', icon: Receipt },
       { id: 'payments', name: 'Payment Collection', path: '/payments', icon: CreditCard },
       { id: 'expenses', name: 'Expenses', path: '/expenses', icon: TrendingDown },
+      { id: 'daily-report', name: 'Daily Activity Report', path: '/reports/daily-summary', icon: CalendarDays },
       { id: 'summary', name: 'Income & Expense Summary', path: '/bills?tab=summary', icon: Coins },
       {
         id: 'setup',
@@ -135,6 +136,7 @@ const MAIN_NAV_ITEMS = [
       { name: 'Patient Bills', path: '/bills', icon: Receipt, description: 'Itemized consultation charges, procedures, and dues' },
       { name: 'Payment Collection', path: '/payments', icon: CreditCard, description: 'Collect patient dues, receipts, and deposit history' },
       { name: 'Expenses', path: '/expenses', icon: TrendingDown, description: 'Disbursements, clinic operating costs, and vouchers' },
+      { name: 'Daily Activity Summary Report', path: '/reports/daily-summary', icon: CalendarDays, description: 'One-row-per-date comprehensive clinical & financial summary ledger' },
       { name: 'Income & Expense Summary', path: '/bills?tab=summary', icon: Coins, description: 'Financial income vs expense summary and P&L tracker' },
       { name: 'Chart of Accounts (COA)', path: '/chart-of-accounts', icon: Layers, description: 'Setup: Revenue & expense category classification' },
       { name: 'Cash & Bank Accounts', path: '/accounts', icon: Landmark, description: 'Setup: Cash counters, commercial bank accounts & ledgers' },
@@ -293,7 +295,9 @@ export const Navbar = () => {
       p.startsWith('/payments') ||
       p.startsWith('/expenses') ||
       p.startsWith('/accounts') ||
-      p.startsWith('/chart-of-accounts')
+      p.startsWith('/chart-of-accounts') ||
+      p.startsWith('/reports') ||
+      p.startsWith('/daily-summary')
     ) {
       return MAIN_NAV_ITEMS.find((m) => m.id === 'finance');
     }
@@ -338,6 +342,9 @@ export const Navbar = () => {
     }
 
     if (modId === 'finance') {
+      if (currentPath.startsWith('/reports') || currentPath.startsWith('/daily-summary')) {
+        return subTab.id === 'daily-report';
+      }
       if (currentPath.startsWith('/bills')) {
         if (params.get('tab') === 'summary' && subTab.id === 'summary') return true;
         if (!params.get('tab') && subTab.id === 'bills') return true;

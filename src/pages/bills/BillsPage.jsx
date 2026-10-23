@@ -12,6 +12,7 @@ import {
   CreditCard,
   Calculator,
   Calendar,
+  CalendarDays,
   User,
   Stethoscope,
   Tag,
@@ -279,13 +280,22 @@ export const BillsPage = () => {
         subtitle="Manage itemized clinic charges, consultation tariffs, patient copayments, and outstanding balances."
         breadcrumbs={[{ label: 'Patient Bills' }]}
         actions={
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-brand-600 via-brand-600 to-teal-600 hover:from-brand-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/25 hover:shadow-glow transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Create Patient Bill</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/reports/daily-summary')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              <CalendarDays className="w-4 h-4 text-brand-600" />
+              <span>Daily Activity Report</span>
+            </button>
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-brand-600 via-brand-600 to-teal-600 hover:from-brand-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/25 hover:shadow-glow transition-all active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Create Patient Bill</span>
+            </button>
+          </div>
         }
       />
 
