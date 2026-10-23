@@ -10,6 +10,8 @@ import { initialCategories } from '../data/mockCategories';
 import { initialExpenses } from '../data/mockExpenses';
 import { initialUsers, defaultRolePermissions } from '../data/mockUsers';
 import { initialNotifications } from '../data/mockNotifications';
+import { initialMedicines } from '../data/mockMedicines';
+import { initialTests } from '../data/mockTests';
 
 const ClinicContext = createContext(null);
 
@@ -26,6 +28,8 @@ const STORAGE_KEYS = {
   USERS: 'medpulse_users_v1',
   CURRENT_USER: 'medpulse_current_user_v1',
   NOTIFICATIONS: 'medpulse_notifications_v1',
+  MEDICINES: 'medpulse_medicines_master_v1',
+  TESTS: 'medpulse_tests_master_v1',
 };
 
 const getStored = (key, fallback) => {
@@ -51,6 +55,8 @@ export const ClinicProvider = ({ children }) => {
   const [expenses, setExpenses] = useState(() => getStored(STORAGE_KEYS.EXPENSES, initialExpenses));
   const [users, setUsers] = useState(() => getStored(STORAGE_KEYS.USERS, initialUsers));
   const [notifications, setNotifications] = useState(() => getStored(STORAGE_KEYS.NOTIFICATIONS, initialNotifications));
+  const [medicines, setMedicines] = useState(() => getStored(STORAGE_KEYS.MEDICINES, initialMedicines));
+  const [tests, setTests] = useState(() => getStored(STORAGE_KEYS.TESTS, initialTests));
   
   // Current user & role simulation
   const [currentUser, setCurrentUser] = useState(() => getStored(STORAGE_KEYS.CURRENT_USER, initialUsers[0]));
@@ -80,10 +86,12 @@ export const ClinicProvider = ({ children }) => {
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
       localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+      localStorage.setItem(STORAGE_KEYS.MEDICINES, JSON.stringify(medicines));
+      localStorage.setItem(STORAGE_KEYS.TESTS, JSON.stringify(tests));
     } catch (err) {
       console.error('Failed to sync to LocalStorage', err);
     }
-  }, [doctors, patients, appointments, prescriptions, bills, payments, accounts, categories, expenses, users, currentUser, notifications]);
+  }, [doctors, patients, appointments, prescriptions, bills, payments, accounts, categories, expenses, users, currentUser, notifications, medicines, tests]);
 
   // Toast helpers
   const addToast = (type, title, message) => {
@@ -136,6 +144,8 @@ export const ClinicProvider = ({ children }) => {
     setUsers(initialUsers);
     setCurrentUser(initialUsers[0]);
     setNotifications(initialNotifications);
+    setMedicines(initialMedicines);
+    setTests(initialTests);
     localStorage.clear();
     addToast('success', 'Reset Complete', 'All demo records restored to initial values.');
   };
@@ -390,6 +400,103 @@ export const ClinicProvider = ({ children }) => {
       prev.map((rx) => (rx.id === id ? { ...rx, ...updatedData } : rx))
     );
     addToast('success', 'Prescription Updated', 'Prescription details updated.');
+  };
+
+  // ==========================================
+  // MEDICINES MASTER CRUD
+  // ==========================================
+  const addMedicine = (medData) => {
+    const newId = medData.id || `MED-${String(medicines.length + 1).padStart(2, '0')}`;
+    const newMed = {
+      ...medData,
+      id: newId,
+      name: medData.name?.trim() || 'Unnamed Medicine',
+      genericName: medData.genericName?.trim() || '',
+      dosage: medData.dosage?.trim() || '',
+      dosageForm: medData.dosageForm || 'Tablet',
+      frequency: medData.frequency || '1-0-1 (Twice daily)',
+      duration: medData.duration || '5 Days',
+      instructions: medData.instructions || '',
+      category: medData.category || 'General Medicine',
+      status: medData.status || 'Active',
+    };
+
+    setMedicines((prev) => [newMed, ...prev]);
+    addToast('success', 'Medicine Added', `${newMed.name} (${newMed.dosage}) added to master catalog.`);
+    return newMed;
+  };
+
+  const updateMedicine = (id, updatedData) => {
+    setMedicines((prev) =>
+      prev.map((med) => (med.id === id ? { ...med, ...updatedData } : med))
+    );
+    addToast('success', 'Medicine Updated', 'Medicine master details updated.');
+  };
+
+  const deleteMedicine = (id) => {
+    setMedicines((prev) => prev.filter((med) => med.id !== id));
+    addToast('info', 'Medicine Removed', 'Medicine removed from master catalog.');
+  };
+
+  const toggleMedicineStatus = (id) => {
+    setMedicines((prev) =>
+      prev.map((med) => {
+        if (med.id === id) {
+          const nextStatus = med.status === 'Active' ? 'Inactive' : 'Active';
+          addToast('info', 'Status Changed', `${med.name} marked as ${nextStatus}.`);
+          return { ...med, status: nextStatus };
+        }
+        return med;
+      })
+    );
+  };
+
+  // ==========================================
+  // DIAGNOSTIC TESTS MASTER CRUD
+  // ==========================================
+  const addTest = (testData) => {
+    const newId = testData.id || `TEST-${String(tests.length + 1).padStart(2, '0')}`;
+    const newTest = {
+      ...testData,
+      id: newId,
+      name: testData.name?.trim() || 'Unnamed Test',
+      category: testData.category || 'General Diagnostics',
+      shortCode: testData.shortCode?.trim() || '',
+      instructions: testData.instructions || '',
+      notes: testData.notes || '',
+      sampleType: testData.sampleType || 'Diagnostic Specimen',
+      standardPrice: Number(testData.standardPrice) || 0,
+      status: testData.status || 'Active',
+    };
+
+    setTests((prev) => [newTest, ...prev]);
+    addToast('success', 'Test Added', `${newTest.name} added to lab test master.`);
+    return newTest;
+  };
+
+  const updateTest = (id, updatedData) => {
+    setTests((prev) =>
+      prev.map((test) => (test.id === id ? { ...test, ...updatedData } : test))
+    );
+    addToast('success', 'Test Updated', 'Diagnostic test master details updated.');
+  };
+
+  const deleteTest = (id) => {
+    setTests((prev) => prev.filter((test) => test.id !== id));
+    addToast('info', 'Test Removed', 'Test removed from lab master.');
+  };
+
+  const toggleTestStatus = (id) => {
+    setTests((prev) =>
+      prev.map((test) => {
+        if (test.id === id) {
+          const nextStatus = test.status === 'Active' ? 'Inactive' : 'Active';
+          addToast('info', 'Status Changed', `${test.name} marked as ${nextStatus}.`);
+          return { ...test, status: nextStatus };
+        }
+        return test;
+      })
+    );
   };
 
   // ==========================================
@@ -892,6 +999,20 @@ export const ClinicProvider = ({ children }) => {
 
         addPrescription,
         updatePrescription,
+
+        // Medicines Master
+        medicines,
+        addMedicine,
+        updateMedicine,
+        deleteMedicine,
+        toggleMedicineStatus,
+
+        // Tests Master
+        tests,
+        addTest,
+        updateTest,
+        deleteTest,
+        toggleTestStatus,
 
         addBill,
         updateBill,

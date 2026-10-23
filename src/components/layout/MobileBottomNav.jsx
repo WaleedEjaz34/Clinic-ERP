@@ -22,6 +22,8 @@ import {
   Coins,
   ChevronRight,
   Bell,
+  Pill,
+  FlaskConical,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { SearchableSelect } from '../common/SearchableSelect';
@@ -394,6 +396,32 @@ export const MobileBottomNav = () => {
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </button>
+
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => handleActionClick('/prescriptions/medicines')}
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-left"
+                  >
+                    <Pill className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">Medicines</span>
+                      <span className="text-[10px] text-slate-400">Master catalog</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleActionClick('/prescriptions/tests')}
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-left"
+                  >
+                    <FlaskConical className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">Lab Tests</span>
+                      <span className="text-[10px] text-slate-400">Test master</span>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {/* Finance Section */}

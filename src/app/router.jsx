@@ -6,6 +6,8 @@ import { DoctorsPage } from '../pages/doctors/DoctorsPage';
 import { AppointmentsPage } from '../pages/appointments/AppointmentsPage';
 import { PatientsPage } from '../pages/patients/PatientsPage';
 import { PrescriptionsPage } from '../pages/prescriptions/PrescriptionsPage';
+import { MedicinesPage } from '../pages/prescriptions/MedicinesPage';
+import { TestsPage } from '../pages/prescriptions/TestsPage';
 import { BillsPage } from '../pages/bills/BillsPage';
 import { PaymentsPage } from '../pages/payments/PaymentsPage';
 import { ExpensesPage } from '../pages/expenses/ExpensesPage';
@@ -39,6 +41,22 @@ export const router = createBrowserRouter([
       {
         path: 'prescriptions',
         element: <PrescriptionsPage />,
+      },
+      {
+        path: 'prescriptions/medicines',
+        element: <MedicinesPage />,
+      },
+      {
+        path: 'prescriptions/tests',
+        element: <TestsPage />,
+      },
+      {
+        path: 'medicines',
+        element: <Navigate to="/prescriptions/medicines" replace />,
+      },
+      {
+        path: 'tests',
+        element: <Navigate to="/prescriptions/tests" replace />,
       },
       {
         path: 'bills',

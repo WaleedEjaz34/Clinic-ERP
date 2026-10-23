@@ -37,6 +37,8 @@ import {
   CalendarDays,
   Coins,
   Building2,
+  Pill,
+  FlaskConical,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { SearchableSelect } from '../common/SearchableSelect';
@@ -93,13 +95,17 @@ const MAIN_NAV_ITEMS = [
     name: 'Prescriptions',
     path: '/prescriptions',
     icon: FileText,
-    subPaths: ['/prescriptions'],
-    summary: 'Clinical prescription records, digital Rx notes, and medication histories.',
+    subPaths: ['/prescriptions', '/prescriptions/medicines', '/prescriptions/tests', '/medicines', '/tests'],
+    summary: 'Clinical prescription records, digital Rx notes, predefined medicine catalog, and diagnostic lab test directory.',
     subTabs: [
       { id: 'list', name: 'Prescription List', path: '/prescriptions', icon: FileText },
+      { id: 'medicines', name: 'Medicines', path: '/prescriptions/medicines', icon: Pill },
+      { id: 'tests', name: 'Tests', path: '/prescriptions/tests', icon: FlaskConical },
     ],
     subItems: [
       { name: 'Prescription List', path: '/prescriptions', icon: FileText, description: 'Browse and filter digital prescriptions and clinical notes' },
+      { name: 'Medicines Master', path: '/prescriptions/medicines', icon: Pill, description: 'Predefined medicines catalog with dosage forms, frequency & instructions' },
+      { name: 'Diagnostic Tests Master', path: '/prescriptions/tests', icon: FlaskConical, description: 'Lab tests directory with prep instructions & diagnostic notes' },
     ],
   },
   {
@@ -281,7 +287,7 @@ export const Navbar = () => {
     if (p === '/') return MAIN_NAV_ITEMS.find((m) => m.id === 'dashboard');
     if (p.startsWith('/patients')) return MAIN_NAV_ITEMS.find((m) => m.id === 'patients');
     if (p.startsWith('/appointments')) return MAIN_NAV_ITEMS.find((m) => m.id === 'appointments');
-    if (p.startsWith('/prescriptions')) return MAIN_NAV_ITEMS.find((m) => m.id === 'prescriptions');
+    if (p.startsWith('/prescriptions') || p.startsWith('/medicines') || p.startsWith('/tests')) return MAIN_NAV_ITEMS.find((m) => m.id === 'prescriptions');
     if (
       p.startsWith('/bills') ||
       p.startsWith('/payments') ||
@@ -326,6 +332,8 @@ export const Navbar = () => {
     }
 
     if (modId === 'prescriptions') {
+      if (currentPath.startsWith('/prescriptions/medicines') || currentPath.startsWith('/medicines')) return subTab.id === 'medicines';
+      if (currentPath.startsWith('/prescriptions/tests') || currentPath.startsWith('/tests')) return subTab.id === 'tests';
       return subTab.id === 'list';
     }
 

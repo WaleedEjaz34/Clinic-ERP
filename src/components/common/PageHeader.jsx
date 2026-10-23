@@ -7,7 +7,9 @@ export const PageHeader = ({
   subtitle,
   breadcrumbs = [],
   actions,
+  children,
 }) => {
+  const headerActions = actions || children;
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200/60 pb-5">
       <div>
@@ -52,9 +54,9 @@ export const PageHeader = ({
       </div>
 
       {/* Action buttons */}
-      {actions && (
+      {headerActions && (
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 flex-shrink-0">
-          {actions}
+          {headerActions}
         </div>
       )}
     </div>
