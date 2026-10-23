@@ -996,3 +996,169 @@ export const generateOutstandingBalancesReportPDF = (rows, grandTotals, meta = {
 
   doc.save(`Outstanding_Patient_Balances_${new Date().toISOString().split('T')[0]}.pdf`);
 };
+
+// ==========================================
+// 8. DOCTOR PERFORMANCE SUMMARY REPORT PDF
+// ==========================================
+export const generateDoctorPerformanceReportPDF = (rows, grandTotals, meta = {}) => {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // Header Banner
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, 297, 30, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(CLINIC_INFO.name, 14, 12);
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225); // slate-300
+  doc.text(`${CLINIC_INFO.address} | Phone: ${CLINIC_INFO.phone}`, 14, 19);
+  doc.text(`${CLINIC_INFO.email} | ${CLINIC_INFO.regNo}`, 14, 25);
+
+  // Subheader: Document Title & Metadata
+  doc.setFillColor(241, 245, 249);
+  doc.rect(14, 34, 269, 18, 'F');
+  doc.setDrawColor(203, 213, 225);
+  doc.rect(14, 34, 269, 18, 'S');
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DOCTOR PERFORMANCE SUMMARY REPORT', 18, 43);
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    `Date Period: ${meta.dateRangeStr || 'All Recorded Dates'}   |   Doctor Filter: ${meta.doctorFilterStr || 'All Doctors'}   |   Printed: ${new Date().toLocaleString()}`,
+    18,
+    48
+  );
+
+  // KPI Summary Cards
+  const cardY = 56;
+  const cardWidth = 51.5;
+  const cardHeight = 16;
+  const cards = [
+    { label: 'Total Appointments', value: String(grandTotals.totalAppointments || 0), color: [15, 23, 42] },
+    { label: 'Completed Consults', value: String(grandTotals.completedAppointments || 0), color: [13, 148, 136] },
+    { label: 'Total Invoiced', value: formatCurrency(grandTotals.totalBilling || 0), color: [15, 23, 42] },
+    { label: 'Total Collected', value: formatCurrency(grandTotals.totalCollection || 0), color: [16, 185, 129] },
+    { label: 'Outstanding Balance', value: formatCurrency(grandTotals.outstanding || 0), color: [225, 29, 72] },
+  ];
+
+  cards.forEach((card, idx) => {
+    const x = 14 + idx * (cardWidth + 3);
+    doc.setFillColor(248, 250, 252);
+    doc.rect(x, cardY, cardWidth, cardHeight, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.rect(x, cardY, cardWidth, cardHeight, 'S');
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 116, 139);
+    doc.text(card.label.toUpperCase(), x + 4, cardY + 5.5);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(card.color[0], card.color[1], card.color[2]);
+    doc.text(card.value, x + 4, cardY + 12.5);
+  });
+
+  // Table Data
+  const tableHead = [
+    [
+      'Doctor',
+      'Total Appts',
+      'Completed',
+      'Cancelled / No Show',
+      'Patients Seen',
+      'Prescriptions',
+      'Total Billing (PKR)',
+      'Total Collection (PKR)',
+      'Outstanding (PKR)',
+    ],
+  ];
+
+  const tableBody = rows.map((r) => [
+    `${r.doctorName}\n${r.specialization} (${r.doctorId})`,
+    String(r.totalAppointments),
+    String(r.completedAppointments),
+    String(r.cancelledOrNoShow),
+    String(r.patientsSeen),
+    String(r.prescriptions),
+    formatCurrency(r.totalBilling),
+    formatCurrency(r.totalCollection),
+    formatCurrency(r.outstanding),
+  ]);
+
+  const tableFoot = [
+    [
+      `Grand Total (${rows.length} ${rows.length === 1 ? 'Doctor' : 'Doctors'})`,
+      String(grandTotals.totalAppointments),
+      String(grandTotals.completedAppointments),
+      String(grandTotals.cancelledOrNoShow),
+      String(grandTotals.patientsSeen),
+      String(grandTotals.prescriptions),
+      formatCurrency(grandTotals.totalBilling),
+      formatCurrency(grandTotals.totalCollection),
+      formatCurrency(grandTotals.outstanding),
+    ],
+  ];
+
+  autoTable(doc, {
+    startY: cardY + cardHeight + 6,
+    head: tableHead,
+    body: tableBody,
+    foot: tableFoot,
+    theme: 'grid',
+    styles: {
+      fontSize: 8,
+      cellPadding: 2.5,
+      textColor: [30, 41, 59],
+    },
+    headStyles: {
+      fillColor: [15, 23, 42],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    footStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [15, 23, 42],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    columnStyles: {
+      0: { halign: 'left', fontStyle: 'bold', cellWidth: 55 },
+      1: { halign: 'center', cellWidth: 24 },
+      2: { halign: 'center', textColor: [13, 148, 136], fontStyle: 'bold', cellWidth: 24 },
+      3: { halign: 'center', textColor: [225, 29, 72], cellWidth: 28 },
+      4: { halign: 'center', cellWidth: 24 },
+      5: { halign: 'center', cellWidth: 24 },
+      6: { halign: 'right', fontStyle: 'bold', cellWidth: 29 },
+      7: { halign: 'right', fontStyle: 'bold', textColor: [16, 185, 129], cellWidth: 29 },
+      8: { halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72], cellWidth: 29 },
+    },
+  });
+
+  // Footer Signatures
+  const finalY = doc.lastAutoTable?.finalY || 160;
+  if (finalY < 185) {
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.line(18, finalY + 16, 75, finalY + 16);
+    doc.text('Prepared By (Medical Records Officer)', 18, finalY + 20);
+
+    doc.line(120, finalY + 16, 175, finalY + 16);
+    doc.text('Reviewed By (Head of Clinical Operations)', 120, finalY + 20);
+
+    doc.line(220, finalY + 16, 275, finalY + 16);
+    doc.text('Approved By (Medical Director / MD)', 220, finalY + 20);
+  }
+
+  doc.save(`Doctor_Performance_Summary_${new Date().toISOString().split('T')[0]}.pdf`);
+};
+

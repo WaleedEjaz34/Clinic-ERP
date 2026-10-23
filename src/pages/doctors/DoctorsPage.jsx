@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Stethoscope,
   Plus,
@@ -14,6 +15,7 @@ import {
   DollarSign,
   UserCheck,
   Check,
+  TrendingUp,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -30,6 +32,7 @@ import { validatePhoneNumber } from '../../utils/phoneUtils';
 const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export const DoctorsPage = () => {
+  const navigate = useNavigate();
   const { doctors, addDoctor, updateDoctor, toggleDoctorStatus, appointments, patients } = useClinic();
 
   // Search & Filter state
@@ -289,13 +292,22 @@ export const DoctorsPage = () => {
         subtitle="Configure attending physicians, consultation fees, and OPD availability schedules."
         breadcrumbs={[{ label: 'Doctors' }]}
         actions={
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-brand-600 via-brand-600 to-teal-600 hover:from-brand-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/25 hover:shadow-glow transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Add Doctor</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/reports/doctor-performance')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 border border-indigo-200/90 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              <TrendingUp className="w-4 h-4 text-indigo-600" />
+              <span>Performance Report</span>
+            </button>
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-brand-600 via-brand-600 to-teal-600 hover:from-brand-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/25 hover:shadow-glow transition-all active:scale-95"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Add Doctor</span>
+            </button>
+          </div>
         }
       />
 

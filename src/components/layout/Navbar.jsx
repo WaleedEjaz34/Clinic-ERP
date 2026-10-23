@@ -10,6 +10,7 @@ import {
   Receipt,
   CreditCard,
   TrendingDown,
+  TrendingUp,
   Landmark,
   Layers,
   ShieldCheck,
@@ -150,15 +151,17 @@ const MAIN_NAV_ITEMS = [
     name: 'Users',
     path: '/users',
     icon: ShieldCheck,
-    subPaths: ['/users', '/doctors'],
-    summary: 'Doctor profiles, clinic staff accounts, and role-based permissions.',
+    subPaths: ['/users', '/doctors', '/reports/doctor-performance', '/doctor-performance', '/reports/doctor-summary'],
+    summary: 'Doctor profiles, clinical performance summaries, clinic staff accounts, and role-based permissions.',
     subTabs: [
       { id: 'doctors', name: 'Doctors', path: '/doctors', icon: Stethoscope },
+      { id: 'doctor-performance', name: 'Doctor Performance', path: '/reports/doctor-performance', icon: TrendingUp },
       { id: 'staff', name: 'Staff & User Management', path: '/users', icon: Users },
       { id: 'roles', name: 'Roles & Permissions', path: '/users?tab=permissions', icon: ShieldCheck },
     ],
     subItems: [
-      { name: 'Doctors', path: '/doctors', icon: Stethoscope, description: 'Doctor profiles, consultation fees, and schedules' },
+      { name: 'Doctors Directory', path: '/doctors', icon: Stethoscope, description: 'Doctor profiles, consultation fees, and schedules' },
+      { name: 'Doctor Performance Summary Report', path: '/reports/doctor-performance', icon: TrendingUp, description: 'Appointments, completed consults, prescriptions, billing & collection per doctor' },
       { name: 'Staff & User Management', path: '/users', icon: Users, description: 'Receptionists, accountants, and staff profiles' },
       { name: 'Roles & Permissions', path: '/users?tab=permissions', icon: ShieldCheck, description: 'Role privileges, module access, and credentials' },
     ],
@@ -308,13 +311,18 @@ export const Navbar = () => {
     ) {
       return MAIN_NAV_ITEMS.find((m) => m.id === 'finance');
     }
-    if (p.startsWith('/doctors')) {
-      if (params.get('from') === 'appointments') {
+    if (
+      p.startsWith('/doctors') ||
+      p.startsWith('/users') ||
+      p.startsWith('/reports/doctor-performance') ||
+      p.startsWith('/doctor-performance') ||
+      p.startsWith('/reports/doctor-summary')
+    ) {
+      if (p.startsWith('/doctors') && params.get('from') === 'appointments') {
         return MAIN_NAV_ITEMS.find((m) => m.id === 'appointments');
       }
       return MAIN_NAV_ITEMS.find((m) => m.id === 'users');
     }
-    if (p.startsWith('/users')) return MAIN_NAV_ITEMS.find((m) => m.id === 'users');
     if (p.startsWith('/settings') || p.startsWith('/activity-log') || p.startsWith('/activity')) {
       return MAIN_NAV_ITEMS.find((m) => m.id === 'settings');
     }
@@ -385,6 +393,14 @@ export const Navbar = () => {
     }
 
     if (modId === 'users') {
+      if (
+        (currentPath.startsWith('/reports/doctor-performance') ||
+          currentPath.startsWith('/doctor-performance') ||
+          currentPath.startsWith('/reports/doctor-summary')) &&
+        subTab.id === 'doctor-performance'
+      ) {
+        return true;
+      }
       if (currentPath.startsWith('/doctors') && subTab.id === 'doctors') return true;
       const tab = params.get('tab') || params.get('view');
       const isPermissions = tab === 'permissions' || tab === 'roles' || tab === 'matrix';

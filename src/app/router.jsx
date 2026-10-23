@@ -19,6 +19,7 @@ import { NotificationsPage } from '../pages/notifications/NotificationsPage';
 import { DailyActivityReportPage } from '../pages/reports/DailyActivityReportPage';
 import { FinancialSummaryReportPage } from '../pages/reports/FinancialSummaryReportPage';
 import { OutstandingBalancesReportPage } from '../pages/reports/OutstandingBalancesReportPage';
+import { DoctorPerformanceReportPage } from '../pages/reports/DoctorPerformanceReportPage';
 import { ActivityLogPage } from '../pages/activity/ActivityLogPage';
 import { RouteErrorBoundary } from '../components/common/RouteErrorBoundary';
 
@@ -127,6 +128,18 @@ export const router = createBrowserRouter([
       {
         path: 'outstanding-balances',
         element: <OutstandingBalancesReportPage />,
+      },
+      {
+        path: 'reports/doctor-performance',
+        element: <DoctorPerformanceReportPage />,
+      },
+      {
+        path: 'reports/doctor-summary',
+        element: <DoctorPerformanceReportPage />,
+      },
+      {
+        path: 'doctor-performance',
+        element: <DoctorPerformanceReportPage />,
       },
       {
         path: 'reports',
