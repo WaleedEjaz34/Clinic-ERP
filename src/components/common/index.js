@@ -9,3 +9,4 @@ export { SearchInput } from './SearchInput';
 export { StatusBadge } from './StatusBadge';
 export { Tabs } from './Tabs';
 export { ToastContainer } from './ToastContainer';
+export { PhoneInput } from './PhoneInput';

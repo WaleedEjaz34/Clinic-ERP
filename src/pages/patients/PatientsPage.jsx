@@ -26,9 +26,11 @@ import { FilterBar } from '../../components/common/FilterBar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
 import { SearchableSelect } from '../../components/common/SearchableSelect';
+import { PhoneInput } from '../../components/common/PhoneInput';
 import { Tabs } from '../../components/common/Tabs';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate, formatTime } from '../../utils/date';
+import { validatePhoneNumber } from '../../utils/phoneUtils';
 
 export const PatientsPage = () => {
   const navigate = useNavigate();
@@ -200,7 +202,17 @@ export const PatientsPage = () => {
 
   const handleSavePatient = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone) return;
+    if (!formData.name) {
+      addToast('error', 'Missing Information', 'Patient name is required.');
+      return;
+    }
+
+    // Validate phone number
+    const phoneVal = validatePhoneNumber(formData.phone, true);
+    if (!phoneVal.isValid) {
+      addToast('error', 'Invalid Phone Number', phoneVal.error || 'Please enter a complete 10-digit phone number.');
+      return;
+    }
 
     if (editingPatient) {
       updatePatient(editingPatient.id, formData);
@@ -460,19 +472,12 @@ export const PatientsPage = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Primary Phone Number *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+92 300 1234567"
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-              />
-            </div>
+            <PhoneInput
+              label="Primary Phone Number"
+              required
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">

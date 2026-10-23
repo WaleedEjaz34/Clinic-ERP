@@ -20,6 +20,8 @@ import { useClinic } from '../../context/ClinicContext';
 import { PageHeader } from '../../components/common/PageHeader';
 import { SearchableSelect } from '../../components/common/SearchableSelect';
 import { ConfirmationDialog } from '../../components/common/ConfirmationDialog';
+import { PhoneInput } from '../../components/common/PhoneInput';
+import { validatePhoneNumber } from '../../utils/phoneUtils';
 
 const SETTING_TABS = [
   { id: 'clinic', label: 'Clinic Settings', icon: Building2 },
@@ -82,7 +84,7 @@ export const SettingsPage = () => {
   const [clinicSettings, setClinicSettings] = useState({
     name: 'MedPulse Specialty Clinic & Diagnostic Centre',
     tagline: 'Advanced Multi-Specialty Ambulatory Care',
-    phone: '+92 (051) 843-2210',
+    phone: '+92 300 8432210',
     emergencyPhone: '+92 300 5550199',
     email: 'info@medpulse.pk',
     address: 'Plot 42, Executive Medical Enclave, Sector F-8/3',
@@ -113,6 +115,29 @@ export const SettingsPage = () => {
   });
 
   const handleSave = (sectionName) => {
+    if (sectionName === 'Clinic Profile Settings') {
+      const phoneVal = validatePhoneNumber(clinicSettings.phone, true);
+      if (!phoneVal.isValid) {
+        addToast({
+          title: 'Invalid Telephone Number',
+          message: phoneVal.error || 'Please enter a complete 10-digit telephone number.',
+          type: 'error',
+        });
+        return;
+      }
+      if (clinicSettings.emergencyPhone) {
+        const emerVal = validatePhoneNumber(clinicSettings.emergencyPhone, false);
+        if (!emerVal.isValid) {
+          addToast({
+            title: 'Invalid Helpline Number',
+            message: emerVal.error || 'Please enter a valid helpline phone number.',
+            type: 'error',
+          });
+          return;
+        }
+      }
+    }
+
     setSaveSuccessMsg(`${sectionName} saved successfully.`);
     addToast({
       title: 'Settings Saved',
@@ -236,29 +261,19 @@ export const SettingsPage = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Official Telephone *
-                  </label>
-                  <input
-                    type="text"
-                    value={clinicSettings.phone}
-                    onChange={(e) => setClinicSettings({ ...clinicSettings, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-                  />
-                </div>
+                <PhoneInput
+                  label="Official Telephone"
+                  required
+                  value={clinicSettings.phone}
+                  onChange={(e) => setClinicSettings({ ...clinicSettings, phone: e.target.value })}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Emergency Helpline
-                  </label>
-                  <input
-                    type="text"
-                    value={clinicSettings.emergencyPhone}
-                    onChange={(e) => setClinicSettings({ ...clinicSettings, emergencyPhone: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-                  />
-                </div>
+                <PhoneInput
+                  label="Emergency Helpline"
+                  required={false}
+                  value={clinicSettings.emergencyPhone}
+                  onChange={(e) => setClinicSettings({ ...clinicSettings, emergencyPhone: e.target.value })}
+                />
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">

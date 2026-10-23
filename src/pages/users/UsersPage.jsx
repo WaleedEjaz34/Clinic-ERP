@@ -25,6 +25,8 @@ import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
 import { SearchableSelect } from '../../components/common/SearchableSelect';
 import { ConfirmationDialog } from '../../components/common/ConfirmationDialog';
+import { PhoneInput } from '../../components/common/PhoneInput';
+import { validatePhoneNumber } from '../../utils/phoneUtils';
 import { defaultRolePermissions } from '../../data/mockUsers';
 
 const ROLES = ['Admin', 'Doctor', 'Receptionist', 'Accountant'];
@@ -173,6 +175,13 @@ export const UsersPage = () => {
   const handleSaveUser = (e) => {
     e.preventDefault();
     setFormError('');
+
+    // Phone validation (strictly requires complete valid phone)
+    const phoneVal = validatePhoneNumber(formData.phone, true);
+    if (!phoneVal.isValid) {
+      setFormError(phoneVal.error || 'Please enter a valid complete phone number.');
+      return;
+    }
 
     if (formData.password && formData.password !== formData.confirmPassword) {
       setFormError('Passwords do not match');
@@ -572,19 +581,12 @@ export const UsersPage = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Phone Number *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+92 300 1234567"
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-              />
-            </div>
+            <PhoneInput
+              label="Phone Number"
+              required
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
