@@ -44,146 +44,206 @@ import { ThemeSettings } from '../pages/website-cms/ThemeSettings';
 // Public Website Preview
 import { WebsitePreview } from '../pages/website-preview/WebsitePreview';
 
+// Public Marketing Website Pages
+import { MarketingLayout } from '../components/marketing/MarketingLayout';
+import { HomePage } from '../pages/marketing/HomePage';
+import { FeaturesPage } from '../pages/marketing/FeaturesPage';
+import { FeatureDetailPage } from '../pages/marketing/FeatureDetailPage';
+import { PricingPage } from '../pages/marketing/PricingPage';
+import { RequestDemoPage } from '../pages/marketing/RequestDemoPage';
+import { ContactPage } from '../pages/marketing/ContactPage';
+import { AboutPage } from '../pages/marketing/AboutPage';
+import { PrivacyPage } from '../pages/marketing/PrivacyPage';
+import { TermsPage } from '../pages/marketing/TermsPage';
+
 export const router = createBrowserRouter([
+  // 1. Public-Facing Marketing Website Routes
   {
-    path: '/',
+    element: <MarketingLayout />,
+    errorElement: <RouteErrorBoundary />,
+    children: [
+      {
+        path: '/',
+        element: <HomePage />,
+      },
+      {
+        path: '/features',
+        element: <FeaturesPage />,
+      },
+      {
+        path: '/features/:moduleId',
+        element: <FeatureDetailPage />,
+      },
+      {
+        path: '/pricing',
+        element: <PricingPage />,
+      },
+      {
+        path: '/request-demo',
+        element: <RequestDemoPage />,
+      },
+      {
+        path: '/contact',
+        element: <ContactPage />,
+      },
+      {
+        path: '/about',
+        element: <AboutPage />,
+      },
+      {
+        path: '/privacy',
+        element: <PrivacyPage />,
+      },
+      {
+        path: '/terms',
+        element: <TermsPage />,
+      },
+    ],
+  },
+
+  // 2. Internal Clinic ERP Dashboard Application Routes
+  {
     element: <AppLayout />,
     errorElement: <RouteErrorBoundary />,
     children: [
       {
-        index: true,
+        path: '/dashboard',
         element: <DashboardPage />,
       },
       {
-        path: 'doctors',
+        path: '/app',
+        element: <Navigate to="/dashboard" replace />,
+      },
+      {
+        path: '/doctors',
         element: <DoctorsPage />,
       },
       {
-        path: 'appointments',
+        path: '/appointments',
         element: <AppointmentsPage />,
       },
       {
-        path: 'patients',
+        path: '/patients',
         element: <PatientsPage />,
       },
       {
-        path: 'prescriptions',
+        path: '/prescriptions',
         element: <PrescriptionsPage />,
       },
       {
-        path: 'prescriptions/medicines',
+        path: '/prescriptions/medicines',
         element: <MedicinesPage />,
       },
       {
-        path: 'prescriptions/tests',
+        path: '/prescriptions/tests',
         element: <TestsPage />,
       },
       {
-        path: 'medicines',
+        path: '/medicines',
         element: <Navigate to="/prescriptions/medicines" replace />,
       },
       {
-        path: 'tests',
+        path: '/tests',
         element: <Navigate to="/prescriptions/tests" replace />,
       },
       {
-        path: 'bills',
+        path: '/bills',
         element: <BillsPage />,
       },
       {
-        path: 'payments',
+        path: '/payments',
         element: <PaymentsPage />,
       },
       {
-        path: 'expenses',
+        path: '/expenses',
         element: <ExpensesPage />,
       },
       {
-        path: 'accounts',
+        path: '/accounts',
         element: <AccountsPage />,
       },
       {
-        path: 'chart-of-accounts',
+        path: '/chart-of-accounts',
         element: <ChartOfAccountsPage />,
       },
       {
-        path: 'users',
+        path: '/users',
         element: <UsersPage />,
       },
       {
-        path: 'settings',
+        path: '/settings',
         element: <SettingsPage />,
       },
       {
-        path: 'notifications',
+        path: '/notifications',
         element: <NotificationsPage />,
       },
       {
-        path: 'reports/daily-summary',
+        path: '/reports/daily-summary',
         element: <DailyActivityReportPage />,
       },
       {
-        path: 'daily-summary',
+        path: '/daily-summary',
         element: <DailyActivityReportPage />,
       },
       {
-        path: 'reports/financial-summary',
+        path: '/reports/financial-summary',
         element: <FinancialSummaryReportPage />,
       },
       {
-        path: 'financial-summary',
+        path: '/financial-summary',
         element: <FinancialSummaryReportPage />,
       },
       {
-        path: 'reports/financial',
+        path: '/reports/financial',
         element: <Navigate to="/reports/financial-summary" replace />,
       },
       {
-        path: 'reports/outstanding-balances',
+        path: '/reports/outstanding-balances',
         element: <OutstandingBalancesReportPage />,
       },
       {
-        path: 'reports/outstanding',
+        path: '/reports/outstanding',
         element: <OutstandingBalancesReportPage />,
       },
       {
-        path: 'outstanding-balances',
+        path: '/outstanding-balances',
         element: <OutstandingBalancesReportPage />,
       },
       {
-        path: 'reports/doctor-performance',
+        path: '/reports/doctor-performance',
         element: <DoctorPerformanceReportPage />,
       },
       {
-        path: 'reports/doctor-summary',
+        path: '/reports/doctor-summary',
         element: <DoctorPerformanceReportPage />,
       },
       {
-        path: 'doctor-performance',
+        path: '/doctor-performance',
         element: <DoctorPerformanceReportPage />,
       },
       {
-        path: 'reports',
+        path: '/reports',
         element: <Navigate to="/reports/financial-summary" replace />,
       },
       {
-        path: 'activity-log',
+        path: '/activity-log',
         element: <ActivityLogPage />,
       },
       {
-        path: 'activity',
+        path: '/activity',
         element: <ActivityLogPage />,
       },
       {
-        path: 'reports/activity-log',
+        path: '/reports/activity-log',
         element: <ActivityLogPage />,
       },
       {
-        path: 'settings/activity-log',
+        path: '/settings/activity-log',
         element: <ActivityLogPage />,
       },
       {
-        path: 'website-cms',
+        path: '/website-cms',
         element: <WebsiteCMSLayout />,
         children: [
           {
@@ -254,6 +314,8 @@ export const router = createBrowserRouter([
       },
     ],
   },
+
+  // 3. Clinic Patient Website Preview Routes (from Website CMS module)
   {
     path: '/website-preview',
     element: <WebsitePreview />,

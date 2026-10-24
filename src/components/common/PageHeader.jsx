@@ -17,7 +17,7 @@ export const PageHeader = ({
         {breadcrumbs.length > 0 && (
           <nav className="flex items-center gap-1.5 text-xs text-slate-500 mb-2 font-medium flex-wrap">
             <Link
-              to="/"
+              to="/dashboard"
               className="inline-flex items-center justify-center p-1 rounded-md text-slate-400 hover:text-brand-600 hover:bg-slate-100 transition-colors"
               title="Dashboard Home"
             >

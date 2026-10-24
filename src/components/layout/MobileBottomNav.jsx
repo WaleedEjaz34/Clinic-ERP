@@ -26,6 +26,7 @@ import {
   FlaskConical,
   CalendarDays,
   History,
+  Globe,
 } from 'lucide-react';
 import { useClinic } from '../../context/ClinicContext';
 import { SearchableSelect } from '../common/SearchableSelect';
@@ -70,7 +71,7 @@ export const MobileBottomNav = () => {
         <div className="grid grid-cols-5 items-center h-16 px-1.5 max-w-md mx-auto">
           {/* 1. Dashboard Tab */}
           <NavLink
-            to="/"
+            to="/dashboard"
             end
             onClick={() => {
               setShowQuickSheet(false);
@@ -619,6 +620,18 @@ export const MobileBottomNav = () => {
                     <div>
                       <span className="text-xs font-bold text-rose-900 block">Reset Demo</span>
                       <span className="text-[10px] text-rose-600">Restore records</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleActionClick('/')}
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-brand-50/80 hover:bg-brand-100 border border-brand-200/80 text-left text-brand-700 col-span-2"
+                  >
+                    <Globe className="w-4 h-4 text-brand-600 flex-shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-brand-900 block">Public Marketing Website</span>
+                      <span className="text-[10px] text-brand-600">Explore features, plans & book demo</span>
                     </div>
                   </button>
                 </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Stethoscope,
@@ -54,15 +54,15 @@ const MAIN_NAV_ITEMS = [
   {
     id: 'dashboard',
     name: 'Dashboard',
-    path: '/',
+    path: '/dashboard',
     exact: true,
     icon: LayoutDashboard,
     summary: 'Real-time overview of clinic operations, appointments, patients, and revenue.',
     subTabs: [
-      { id: 'overview', name: 'Overview', path: '/', icon: LayoutDashboard },
+      { id: 'overview', name: 'Overview', path: '/dashboard', icon: LayoutDashboard },
     ],
     subItems: [
-      { name: 'Overview', path: '/', icon: LayoutDashboard, description: 'Real-time clinic operations, queues, and financial summary' },
+      { name: 'Overview', path: '/dashboard', icon: LayoutDashboard, description: 'Real-time clinic operations, queues, and financial summary' },
     ],
   },
   {
@@ -198,16 +198,6 @@ const MAIN_NAV_ITEMS = [
     icon: Globe,
     subPaths: ['/website-cms', '/website-preview'],
     summary: 'Public clinic website content management system, homepage builder, medical services, doctors, pages, media, and preview.',
-    subTabs: [
-      { id: 'overview', name: 'Overview', path: '/website-cms', icon: LayoutDashboard },
-      { id: 'settings', name: 'Website Settings', path: '/website-cms/settings', icon: Settings },
-      { id: 'homepage', name: 'Homepage Builder', path: '/website-cms/homepage', icon: PanelsTopLeft },
-      { id: 'pages', name: 'Pages', path: '/website-cms/pages', icon: FileText },
-      { id: 'services', name: 'Services', path: '/website-cms/services', icon: Briefcase },
-      { id: 'doctors', name: 'Doctor Profiles', path: '/website-cms/doctors', icon: Stethoscope },
-      { id: 'contact', name: 'Appointments & Contact', path: '/website-cms/contact', icon: CalendarCheck },
-      { id: 'preview', name: 'Preview Website', path: '/website-preview', icon: Eye },
-    ],
     subItems: [
       { name: 'CMS Dashboard', path: '/website-cms', icon: LayoutDashboard, description: 'Overview statistics, quick actions, draft queues, and recent updates' },
       { name: 'Website Settings', path: '/website-cms/settings', icon: Settings, description: 'Clinic branding, contact email, working hours, and social media links' },
@@ -453,18 +443,6 @@ export const Navbar = () => {
       return subTab.id === currentTab;
     }
 
-    if (modId === 'website-cms') {
-      if (currentPath === '/website-cms') return subTab.id === 'overview';
-      if (currentPath.startsWith('/website-preview')) return subTab.id === 'preview';
-      if (currentPath.startsWith('/website-cms/settings')) return subTab.id === 'settings';
-      if (currentPath.startsWith('/website-cms/homepage')) return subTab.id === 'homepage';
-      if (currentPath.startsWith('/website-cms/pages')) return subTab.id === 'pages';
-      if (currentPath.startsWith('/website-cms/services')) return subTab.id === 'services';
-      if (currentPath.startsWith('/website-cms/doctors')) return subTab.id === 'doctors';
-      if (currentPath.startsWith('/website-cms/contact')) return subTab.id === 'contact';
-      return false;
-    }
-
     return false;
   };
 
@@ -581,7 +559,7 @@ export const Navbar = () => {
 
           {/* MedPulse Brand Logo */}
           <NavLink
-            to="/"
+            to="/dashboard"
             className="flex items-center gap-2.5 group cursor-pointer focus:outline-none"
             title="MedPulse Clinic ERP"
           >
@@ -745,6 +723,16 @@ export const Navbar = () => {
           >
             <Search className="w-4 h-4" />
           </button>
+
+          {/* Public Marketing Website Switcher */}
+          <Link
+            to="/"
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 border border-slate-200/80 rounded-xl transition-all"
+            title="View Public Marketing Website"
+          >
+            <Globe className="w-3.5 h-3.5 text-brand-600" />
+            <span className="hidden xl:inline">Public Website</span>
+          </Link>
 
           {/* Quick "+ New Action" Dropdown */}
           <div className="relative">
